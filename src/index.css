@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	body {
+		font-family: 'IBM Plex Sans';
+	}
+}
+
+@theme {
+    --color-*: initial;
+    --color-color_primary: #F9FAFB;
+    --color-color_secondary: #E5E7EB;
+    --color-grey: #C7C8CC;
+    --color-dark_grey: #B1B1B1;
+    --color-dark_grey_2: #808080;
+    --color-biru: #305CDE;
+    --color-biru_2: #002697;
+
+    --font-weight-*: initial;
+    --font-weight-bold: 700;
+}
+
+
