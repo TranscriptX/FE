@@ -14,6 +14,7 @@ function App() {
                 {/* <Route path="forgot-password" element={<ForgotPage/>} /> */}
                 {/* <Route path="dashboard" element={<DashboardPage/>} /> */}
                 {/* <Route path="tools" element={<ToolsPage/>} /> */}
+                {/* <Route path="profile" element={<ProfilePage/>} /> */}
             </Routes>
         </BrowserRouter>
     </AuthProvider>
