@@ -14,6 +14,7 @@ const RegisterPage = () => {
     const[error, setError] = useState("");
     const[successMessage, setSuccessMessage] = useState("");
     const navigate = useNavigate();
+    const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500";
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -78,9 +79,79 @@ const RegisterPage = () => {
     return (
         <>
             <Navbar currentPage="Register"/>
-            <div>
-                <div>
-                    <h2 className="text-3xl font-bold text-center">Register</h2>
+            <div className="min-h-screen flex flex-row items-center justify-center bg-white">
+
+                <div className="w-full max-w-[10px] min-h-[520px] bg-color_secondary rounded-md shadow-md translate-x-3 translate-y-3 pl-[10px]"></div>
+                
+                <div className="z-10 bg-grey w-full max-w-[500px] min-h-[550px] flex flex-col align-items justify-content">
+                    <h2 className="text-2xl font-bold text-center">Register</h2>
+
+                    {error && (
+                    <div className="text-[red] px-[4px] py-[2px]">
+                        {error}
+                    </div>
+                    )}
+
+                    {successMessage && (
+                    <div className="bg-green-100 text-green-700 px-4 py-2 rounded mb-4">
+                        {successMessage}
+                    </div>
+                    )}
+                    <div className="">
+                        <form onSubmit={handleSubmit} className="space-y-[12px] flex flex-col justify-center items-center">
+                            <input
+                                type="text"
+                                id="username"
+                                placeholder="Enter your username"
+                                value={formData.username}
+                                onChange={handleInputChange}
+                                className={inputStyle}
+                            />
+
+                            <input
+                                type="email"
+                                id="email"
+                                placeholder="Enter your email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                className={inputStyle}
+                            />
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Enter your password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                className={inputStyle}
+                            />
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                placeholder="Confirm your password"
+                                value={formData.confirmPassword}
+                                onChange={handleInputChange}
+                                className={inputStyle}
+                            />
+                            <div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-[200px] text-white font-bold py-[5px] rounded-lg hover:bg-purple-700 transition-colors"
+                                >
+                                    {loading ? "Signing up..." : "Sign in"}
+                                </button>    
+                            </div>
+                            
+                        </form>    
+                    </div>
+                
+
+                    <p className="text-center text-sm text-gray-700 mt-4">
+                    Already have an account?{" "}
+                    <a href="/login" className="text-blue-600 hover:underline">
+                        Log in
+                    </a>
+                    </p>
                 </div>
             </div>
         </>
