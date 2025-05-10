@@ -30,7 +30,7 @@ const AuthProvider: React.FC<IAuthProvider> = ({ children }) => {
             }
 
             setUser({
-                username: response.username,
+                name: response.name,
                 email: response.email,
                 role: response.role,
             });
@@ -58,7 +58,7 @@ const AuthProvider: React.FC<IAuthProvider> = ({ children }) => {
             }
 
             setUser({
-                username: response.username,
+                name: response.name,
                 email: response.email,
                 role: response.role,
             });
