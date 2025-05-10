@@ -15,7 +15,7 @@ const RegisterPage = () => {
     const[error, setError] = useState("");
     const[successMessage, setSuccessMessage] = useState("");
     const navigate = useNavigate();
-    const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] border border-color_secondary rounded-[3px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[14px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)]";
+    const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)]";
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -46,7 +46,7 @@ const RegisterPage = () => {
 
         try{
             setLoading(true);
-            const response = await fetch("Link API untuk register", {
+            const response = await fetch("URL API UTK REGISTER", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
