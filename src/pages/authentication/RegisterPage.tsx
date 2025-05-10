@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import Navbar from "../../components/Navbar";
+import ExpandingCard from "../../components/ExpandingCard";
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
-        username: "",
+        name: "",
         email: "",
         password: "",
         confirmPassword: "",
@@ -26,9 +27,9 @@ const RegisterPage = () => {
         setError("");
         setSuccessMessage("");
 
-        const { username, email, password, confirmPassword } = formData;
+        const { name, email, password, confirmPassword } = formData;
 
-        if (!username || !email || !password || !confirmPassword) {
+        if (!name || !email || !password || !confirmPassword) {
             setError("Please fill in all the fields.");
             return;
         }
@@ -49,7 +50,7 @@ const RegisterPage = () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    username: username,
+                    name: name,
                     email: email,
                     password: password,
                 }),
@@ -60,7 +61,7 @@ const RegisterPage = () => {
             if (response.ok){
                 setSuccessMessage(result.message);
                 setFormData({
-                    username: "",
+                    name: "",
                     email: "",
                     password: "",
                     confirmPassword: "",
@@ -81,13 +82,17 @@ const RegisterPage = () => {
             <Navbar currentPage="Register"/>
             <div className="min-h-screen flex flex-row items-center justify-center bg-white">
 
-                <div className="w-full max-w-[10px] min-h-[520px] bg-color_secondary rounded-md shadow-md translate-x-3 translate-y-3 pl-[10px]"></div>
+                <div className="min-h-screen flex justify-center items-center bg-gray-100">
+                <ExpandingCard/>   
+                </div>
                 
-                <div className="z-10 bg-grey w-full max-w-[500px] min-h-[550px] flex flex-col align-items justify-content">
+                {/* <div className="w-full max-w-[10px] min-h-[480px] bg-color_secondary rounded-md shadow-md translate-x-3 translate-y-3 pl-[10px]"></div> */}
+                
+                <div className="z-10 bg-grey w-full max-w-[500px] min-h-[500px] flex flex-col align-items justify-content">
                     <h2 className="text-2xl font-bold text-center">Register</h2>
 
                     {error && (
-                    <div className="text-[red] px-[4px] py-[2px]">
+                    <div className="text-[red] px-[4px] py-[4px] mb-[10px] ml-[42px] mr-[42px] bg-light_red">
                         {error}
                     </div>
                     )}
@@ -101,9 +106,9 @@ const RegisterPage = () => {
                         <form onSubmit={handleSubmit} className="space-y-[12px] flex flex-col justify-center items-center">
                             <input
                                 type="text"
-                                id="username"
-                                placeholder="Enter your username"
-                                value={formData.username}
+                                id="name"
+                                placeholder="Enter your name"
+                                value={formData.name}
                                 onChange={handleInputChange}
                                 className={inputStyle}
                             />
@@ -136,7 +141,7 @@ const RegisterPage = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-[200px] text-white font-bold py-[5px] rounded-lg hover:bg-purple-700 transition-colors"
+                                    className="w-[350px] mt-[30px] text-white font-bold py-[8px] rounded-lg hover:bg-purple-700 transition-colors"
                                 >
                                     {loading ? "Signing up..." : "Sign in"}
                                 </button>    
