@@ -82,7 +82,7 @@ const RegisterPage = () => {
             <Navbar currentPage="Register"/>
             <div className="min-h-screen flex flex-row items-center justify-center bg-white">
 
-                <div className="min-h-screen flex justify-center items-center">
+                <div className="flex justify-center items-center">
                 <ExpandingCard/>   
                 </div>
                 
