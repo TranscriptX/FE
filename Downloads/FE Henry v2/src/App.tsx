@@ -1,0 +1,38 @@
+import { AuthProvider } from "./context/AuthContext";
+import './App.css'
+import './index.css'
+import { BrowserRouter, Route, Routes } from "react-router";
+import RegisterPage from "./pages/authentication/RegisterPage";
+import Tools from './pages/Menu/Tools';
+import DocumentSummarizer from './pages/Menu/DocumentSummarizer';  
+import AudioVideoTranscription from './pages/Menu/AudioVideoTranscription';  
+import Dashboard from './pages/Dashboard/Dashboard';  
+import ViewWorkspace from './pages/Dashboard/ViewWorkspace';  
+import EditWorkspace from './pages/Dashboard/EditWorkspace';  
+import ExportWorkspace from './pages/Dashboard/ExportWorkspace';  
+
+function App() {
+  return ( 
+    <AuthProvider>
+        <BrowserRouter>
+            <Routes>
+                {/* <Route path="login" element={<LoginPage/>} /> */}
+                <Route path="/" element={<RegisterPage/>} />
+                {/* <Route path="forgot-password" element={<ForgotPage/>} /> */}
+                {/* <Route path="dashboard" element={<DashboardPage/>} /> */}
+                {/* <Route path="tools" element={<ToolsPage/>} /> */}
+                <Route path="/Tools" element={<Tools />} />
+                <Route path="/document-summarizer" element={<DocumentSummarizer />} />
+                <Route path="/audio-video-transcription" element={<AudioVideoTranscription />} />
+                <Route path="/Dashboard" element={<Dashboard />} />
+                <Route path="/view-workspace/:id" element={<ViewWorkspace />} />
+                <Route path="/edit-workspace/:id" element={<EditWorkspace />} />
+                <Route path="/ExportWorkspace" element={<ExportWorkspace />} />
+                {/* <Route path="profile" element={<ProfilePage/>} /> */}
+            </Routes>
+        </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;
