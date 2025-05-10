@@ -16,14 +16,20 @@ export default function ExpandingCard() {
             onMouseEnter={() => {
                 if (isClosedByClick) setIsOpen(true);
             }}
-            className={`group relative shadow-md hover:shadow-lg transition-all duration-700 ease-in-out cursor-pointer overflow-hidden ${isOpen ? "w-[400px]" : "w-[15px]"} min-h-[480px] bg-color_secondary`}>
+            className={`group relative shadow-[0_5px_5px_rgba(0,0,0,0.25)] hover:shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-all duration-700 ease-in-out cursor-pointer overflow-hidden ${isOpen ? "w-[400px]" : "w-[15px]"} min-h-[480px] bg-color_secondary`}>
             
-            <div className={`fixed inset-0 flex-col justify-center items-center max-h-0 opacity-0 group-hover:opacity-100 mt-[50px] ml-[20px] transition-all duration-400 ease-in-out max-w-[360px] ${isOpen ? "opacity-100 mt-[50px] max-h-[200px]" : "opacity-0 mt-0 max-h-0"}`}>
-                <h1 className="text-black text-center text-lg">
+            <div className={`fixed inset-0 flex-col justify-center items-center max-h-0 opacity-0 group-hover:opacity-100 mt-[80px] ml-[30px] transition-all duration-400 ease-in-out max-w-[350px] ${isOpen ? "opacity-100 mt-[50px] max-h-[200px]" : "opacity-0 mt-0 max-h-0"}`}>
+                <h1 className="text-black text-center text-[36px]">
                     Get Started!
                 </h1>
-                <p className="mt-[50px] text-center">
-                    Start Transcribing and Summarizing Smarter with AI. Join TranscriptX to unlock seamless, accurate, and fast summarization and audio-to-text conversion, powered by AI.
+                <p className="mt-[30px] text-center">
+                    Start Transcribing and Summarizing Smarter with AI.
+                </p>
+                <p className="mt-[20px] text-center">
+                    Join TranscriptX to unlock seamless, accurate, and fast summarization and audio-to-text conversion, powered by AI.
+                </p>
+                <p className="mt-[60px] text-center opacity-40">
+                    (Click again to close)
                 </p>
 
             </div>
