@@ -15,7 +15,7 @@ const RegisterPage = () => {
     const[error, setError] = useState("");
     const[successMessage, setSuccessMessage] = useState("");
     const navigate = useNavigate();
-    const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-[14px]";
+    const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] border border-color_secondary rounded-[3px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[14px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)]";
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -86,8 +86,6 @@ const RegisterPage = () => {
                 <ExpandingCard/>   
                 </div>
                 
-                {/* <div className="w-full max-w-[10px] min-h-[480px] bg-color_secondary rounded-md shadow-md translate-x-3 translate-y-3 pl-[10px]"></div> */}
-                
                 <div className="z-10 bg-grey w-full max-w-[500px] min-h-[500px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">
                     <h1 className="text-2xl font-bold text-center">Register</h1>
 
@@ -141,7 +139,7 @@ const RegisterPage = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="cursor-pointer shadow-[0_3px_3px_rgba(0,0,0,0.25)] w-[350px] mt-[30px] bg-color_primary text-[18px] font-bold py-[10px] rounded-lg hover:bg-color_secondary border-none transition-all duration-300 ease-in-out"
+                                    className="cursor-pointer shadow-[0_3px_3px_rgba(0,0,0,0.25)] w-[350px] mt-[30px] bg-color_primary text-[18px] font-bold py-[10px] rounded-lg hover:bg-color_secondary border-none transition-all duration-300 ease-in-out hover:ring-2 ring-dark_grey"
                                 >
                                     {loading ? "Signing up..." : "Sign in"}
                                 </button>    
@@ -151,9 +149,9 @@ const RegisterPage = () => {
                     </div>
                 
 
-                    <p className="text-center text-sm text-gray-700 mt-4">
+                    <p className="text-center text-sm mt-4">
                     Already have an account?{" "}
-                    <a href="/login" className="text-blue-600 hover:underline">
+                    <a href="/login" className="text-biru no-underline hover:underline">
                         Log in
                     </a>
                     </p>
