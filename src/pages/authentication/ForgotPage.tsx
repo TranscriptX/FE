@@ -1,6 +1,5 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router";
-import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 
@@ -99,8 +98,11 @@ const ForgotPage = () => {
                 </div>
 
                 {showModal && (
-                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-40 z-50">
-                        <div className="bg-pop p-8 rounded-lg shadow-lg max-w-[400px] text-center">
+                    <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+                        <div className="fixed inset-0 flex justify-center items-center opacity-40 z-49 bg-black min-w-screen min-h-screen">
+
+                        </div>
+                        <div className="bg-pop p-8 rounded-lg shadow-lg max-w-[400px] text-center z-51 relative">
                             <h2 className="text-xl font-bold mb-4">Success!</h2>
                             <p>Password reset link sent to <b>{email}</b>.</p>
                             <button
