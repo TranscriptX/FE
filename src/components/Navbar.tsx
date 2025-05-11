@@ -55,7 +55,7 @@ const Navbar = (props: NavbarType) => {
     };
 
     return (
-        <header className="w-full h-full m-[-8px] bg-color_secondary shadow-md flex justify-between items-center sticky z-50 pl-[20px] left-[20px]">
+        <header className="w-full bg-color_secondary shadow-md flex justify-between items-center fixed top-[8px] left-[20px] z-50 m-[-8px] ml-[-20px] pl-[8px] shadow-[0_2px_5px_rgba(0,0,0,0.25)]">
             <div className="font-bold m-[4px]">
                 <span className="text-[36px] drop-shadow-[0_2px_1px_rgba(0,0,0,0.4)]">T</span>
                 <span className="text-[24px] drop-shadow-[0_2px_1px_rgba(0,0,0,0.4)]">RANSCRIPT</span>
@@ -134,23 +134,3 @@ const Navbar = (props: NavbarType) => {
 };
 
 export default Navbar;
-
-{/* <div class="flex items-center justify-end bg-gray-300 p-4 space-x-4 rounded-bl-xl">
-  <!-- Profile Icon -->
-  <div class="w-10 h-10 flex items-center justify-center rounded-full border-2 border-black">
-    <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A4 4 0 0112 15a4 4 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  </div>
-
-  <!-- Profile Info -->
-  <div class="text-right">
-    <div class="text-lg font-semibold text-black">John Doe</div>
-    <div class="text-sm text-black space-x-2">
-      <a href="#" class="hover:underline">Edit My Profile</a>
-      <span>|</span>
-      <a href="#" class="hover:underline">Dashboard</a>
-    </div>
-    <a href="#" class="text-blue-600 text-sm hover:underline">Logout</a>
-  </div>
-</div> */}
