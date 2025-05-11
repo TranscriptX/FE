@@ -106,9 +106,9 @@ const ForgotPage = () => {
                             <button
                                 onClick={() => {
                                     setShowModal(false);
-                                    navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+                                    navigate(`/reset-password`);
                                 }}
-                                className="mt-6 bg-color_primary text-white font-semibold px-4 py-2 rounded hover:bg-grey transition"
+                                className="mt-6 bg-color_primary text-white font-semibold px-4 py-2 rounded hover:bg-grey transition-400 ease-in-out"
                             >
                                 OK
                             </button>
