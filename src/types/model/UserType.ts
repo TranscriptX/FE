@@ -1,5 +1,5 @@
 type UserType = {
-    name: string;
+    username: string;
     email: string;
     role: number;
 }
