@@ -54,7 +54,6 @@ const Navbar = (props: NavbarType) => {
         navigate("../login");
     };
 
-
     return (
         <header className="w-full h-full m-[-8px] bg-color_secondary shadow-md flex justify-between items-center sticky z-50 pl-[20px] left-[20px]">
             <div className="font-bold m-[4px]">

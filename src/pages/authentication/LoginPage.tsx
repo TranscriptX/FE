@@ -1,0 +1,105 @@
+import { useContext, useState } from "react";
+import { useNavigate } from "react-router";
+import { AuthContext } from "../../context/AuthContext";
+import axios from "axios";
+import Navbar from "../../components/Navbar";
+import ExpandingCardLogin from "../../components/ExpandingCardLogin";
+
+
+const LoginPage = () => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+    const authContext = useContext(AuthContext)
+
+    const handleLogin = async() => {
+        try{
+            const response = await axios.post("URL UTK API LOGIN", {
+                email: email,
+                password: password,
+            });
+
+            const { access_token } = response.data;
+            localStorage.setItem("token", access_token)
+
+            authContext?.updateTokenHandler(access_token);
+            alert("Login successful!");
+            navigate("./Tools")
+        }catch (err){
+            setError("Login failed. Please check your email and password.");
+        }
+    };
+
+    const inputStyle = "w-[400px] px-[4px] py-[16px] mt-[8px] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)]";
+
+    return (
+        <>
+            <Navbar currentPage="Login"/>
+            <div className="min-h-screen flex flex-row items-center justify-center bg-white">
+                
+                <div className="z-10 bg-color_secondary w-full max-w-[500px] min-h-[500px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">
+                    <h1 className="text-2xl font-bold text-center mb-[40px] mt-[50px]">Login</h1>
+
+                    {error &&
+                    <div className="text-[red] px-[4px] py-[4px] mb-[10px] ml-[42px] mr-[42px] bg-light_red">
+                        {error}
+                    </div>
+                    }
+
+                    <div>
+                        <form className="space-y-[12px] flex flex-col items-center">
+
+                            <input
+                                type="email"
+                                id="email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className={inputStyle}
+                            />
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className={inputStyle}
+                            />
+
+                            <a href="/forgot" className="text-biru no-underline hover:underline text-[16px] mt-[8px] mr-[280px]">
+                                Forgot Password?
+                            </a>
+
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={handleLogin}
+                                    className="cursor-pointer shadow-[0_3px_3px_rgba(0,0,0,0.25)] w-[350px] mt-[20px] bg-color_primary text-[18px] font-bold py-[10px] rounded-lg hover:bg-grey border-none transition-all duration-300 ease-in-out hover:ring-2 ring-dark_grey"
+                                >
+                                    Login
+                                </button>    
+                            </div>
+                            
+                        </form>    
+                    </div>
+                
+
+                    <p className="text-center text-sm mt-4">
+                    Don't have an account?{" "}
+                        <a href="/register" className="text-biru no-underline hover:underline">
+                            Create one
+                        </a>
+                    </p>
+                </div>
+
+                <div className="flex justify-center items-center">
+                    <ExpandingCardLogin/>   
+                </div>
+            </div>
+        </>
+    );
+
+};
+
+export default LoginPage
