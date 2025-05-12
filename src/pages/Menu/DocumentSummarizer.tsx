@@ -12,12 +12,14 @@ const DocumentSummarizer = () => {
   // States for pop-up modals
   const [showShareModal, setShowShareModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
- 
 
-
+  // Handle file change, and reset summarization if a new file is uploaded
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
+      // Reset summarization if a new file is uploaded
+      setIsSummarized(false);
+      setSummaryResult("");
     }
   };
 
@@ -47,8 +49,7 @@ const DocumentSummarizer = () => {
       {/* Modal Pop-up for Share */}
       {showShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen">
-          </div>
+          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
             <img src={checkSign} alt="check" className="size-[96px]" />
@@ -88,13 +89,10 @@ const DocumentSummarizer = () => {
         </div>
       )}
 
-
-
       {/* Modal Pop-up for Export */}
       {showExportModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen">
-          </div>
+          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
             <img src={checkSign} alt="check" className="size-[96px]" />
@@ -108,7 +106,6 @@ const DocumentSummarizer = () => {
           </div>
         </div>
       )}
-
 
       <div className="bg-gray-100 min-h-screen flex items-start justify-center py-6 px-4 sm:px-6 lg:px-8">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
@@ -203,8 +200,6 @@ const DocumentSummarizer = () => {
           )}
         </div>
       </div>
-
-      
     </>
   );
 };
