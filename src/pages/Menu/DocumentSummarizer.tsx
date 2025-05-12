@@ -1,17 +1,19 @@
 import { useState } from "react";
 import checkSign from "../../assets/check-sign.svg";
-import Navbar from "../../components/Navbar"; // Import Navbar
+import Navbar from "../../components/Navbar"; 
+import { useNavigate } from "react-router-dom"; 
 
 const DocumentSummarizer = () => {
+  const navigate = useNavigate(); 
+
   const [file, setFile] = useState<File | null>(null);
   const [workspaceTitle, setWorkspaceTitle] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [summaryResult, setSummaryResult] = useState("");
   const [isSummarized, setIsSummarized] = useState(false);
 
-  // States for pop-up modals
+  
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
 
   // Handle file change, and reset summarization if a new file is uploaded
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,13 +34,20 @@ const DocumentSummarizer = () => {
     setShowShareModal(true); // Show the share confirmation modal
   };
 
+  
   const handleExport = () => {
-    setShowExportModal(true); // Show the export confirmation modal
+    const workspaceData = {
+      title: workspaceTitle,
+      description: workspaceDescription,
+      summary: summaryResult,
+      fileName: file ? file.name : "Unnamed File",
+    };
+    // Navigate to ExportWorkspace page with workspace data as state
+    navigate("/ExportWorkspace", { state: workspaceData });
   };
 
   const closeModal = () => {
     setShowShareModal(false);
-    setShowExportModal(false);
   };
 
   return (
@@ -82,24 +91,6 @@ const DocumentSummarizer = () => {
             <button
               onClick={closeModal}
               className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Pop-up for Export */}
-      {showExportModal && (
-        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
-          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
-            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
-            <p>____________________________________________</p>
-            <button
-              onClick={closeModal}
-              className="bg-yellow-500 text-white font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-yellow-600 transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
             >
               OK
             </button>
