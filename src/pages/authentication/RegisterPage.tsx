@@ -15,7 +15,7 @@ const RegisterPage = () => {
     const[error, setError] = useState("");
     const[successMessage, setSuccessMessage] = useState("");
     const navigate = useNavigate();
-    const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)]";
+    const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] inset-shadow-[1px_1.5px_2px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;

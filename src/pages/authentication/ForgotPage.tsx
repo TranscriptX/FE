@@ -10,7 +10,7 @@ const ForgotPage = () => {
     const [showModal, setShowModal] = useState(false);
     const navigate = useNavigate();
 
-    const inputStyle = "w-[400px] px-[4px] py-[16px] mt-[8px] mb-[20px] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)]";
+    const inputStyle = "w-[400px] px-[4px] py-[16px] mt-[8px] mb-[20px] inset-shadow-[1px_1.5px_2px_rgba(0,0,0,0.25)] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
     const handleForgot = async() => {
         setError("");
@@ -33,6 +33,7 @@ const ForgotPage = () => {
             <Navbar currentPage="Forgot"/>
             <div className="min-h-screen flex flex-row items-center justify-center bg-white">
                 
+            {/* Testing */}
             {process.env.NODE_ENV === "development" && (
                 <button
                     onClick={() => {
