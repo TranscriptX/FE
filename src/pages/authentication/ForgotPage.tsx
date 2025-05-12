@@ -1,8 +1,8 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router";
-import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
+import checkSign from "../../assets/check-sign.svg";
 
 const ForgotPage = () => {
     const [email, setEmail] = useState("");
@@ -99,16 +99,21 @@ const ForgotPage = () => {
                 </div>
 
                 {showModal && (
-                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-40 z-50">
-                        <div className="bg-pop p-8 rounded-lg shadow-lg max-w-[400px] text-center">
-                            <h2 className="text-xl font-bold mb-4">Success!</h2>
-                            <p>Password reset link sent to <b>{email}</b>.</p>
+                    <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+                        <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen">
+
+                        </div>
+                        <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+                            <h2 className="text-xl font-bold mb-0">Success!</h2>
+                            <img src={checkSign} alt="check" className="size-[96px]" />
+                            <p className="break-all max-w-[300px] text-center mb-auto flex flex-col items-center">Password reset link sent to <b className="text-center mb-auto">{email}</b></p>
+                            <p>____________________________________________</p>
                             <button
                                 onClick={() => {
                                     setShowModal(false);
-                                    navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+                                    navigate(`/reset-password`);
                                 }}
-                                className="mt-6 bg-color_primary text-white font-semibold px-4 py-2 rounded hover:bg-grey transition"
+                                className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
                             >
                                 OK
                             </button>
