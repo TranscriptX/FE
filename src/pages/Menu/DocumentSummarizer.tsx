@@ -1,4 +1,5 @@
 import { useState } from "react";
+import checkSign from "../../assets/check-sign.svg";
 import Navbar from "../../components/Navbar"; // Import Navbar
 
 const DocumentSummarizer = () => {
@@ -11,6 +12,8 @@ const DocumentSummarizer = () => {
   // States for pop-up modals
   const [showShareModal, setShowShareModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+ 
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -40,6 +43,72 @@ const DocumentSummarizer = () => {
     <>
       {/* Navbar */}
       <Navbar currentPage="All Tools" />
+    
+      {/* Modal Pop-up for Share */}
+      {showShareModal && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen">
+          </div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
+            <img src={checkSign} alt="check" className="size-[96px]" />
+            
+            {/* Textbox for the link */}
+            <textarea
+              value="transcriptx/shared/123"  // Link yang akan ditampilkan
+              readOnly  // Agar tidak bisa diubah oleh pengguna
+              className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+              rows={1}  // Menyesuaikan tinggi textarea
+            />
+            
+            {/* Copy Link Button */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText('transcriptx/shared/123') // Link yang akan disalin
+                  .then(() => {
+                    alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
+                  })
+                  .catch(error => {
+                    alert("Failed to copy link. Please try again."); // Menangani error jika gagal
+                  });
+              }}
+              className="py-2 px-6 bg-ijo text-black rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              Copy Link
+            </button>
+            
+            <p>____________________________________________</p>
+            <button
+              onClick={closeModal}
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* Modal Pop-up for Export */}
+      {showExportModal && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen">
+          </div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
+            <img src={checkSign} alt="check" className="size-[96px]" />
+            <p>____________________________________________</p>
+            <button
+              onClick={closeModal}
+              className="bg-yellow-500 text-white font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-yellow-600 transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
 
       <div className="bg-gray-100 min-h-screen flex items-start justify-center py-6 px-4 sm:px-6 lg:px-8">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
@@ -92,11 +161,17 @@ const DocumentSummarizer = () => {
             <div className="flex justify-end mb-4">
               <button
                 onClick={handleSummarize}
-                className="py-2 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!file} // Disable button if no file is uploaded
+                className={`py-2 px-6 ${!file ? 'bg-gray-400' : 'bg-blue-600'} text-white rounded-md hover:${file ? 'bg-blue-700' : 'bg-gray-400'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
               >
                 Summarize
               </button>
             </div>
+          )}
+
+          {/* Display message to upload file if none is selected */}
+          {!file && !isSummarized && (
+            <p className="text-center text-biru text-sm mt-2">Please upload a document to summarize.</p>
           )}
 
           {/* Summary Result */}
@@ -129,40 +204,7 @@ const DocumentSummarizer = () => {
         </div>
       </div>
 
-      {/* Modal Pop-up for Share */}
-      {showShareModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-            <h2 className="text-xl font-semibold text-center mb-4">Successfully Created Share Link</h2>
-            <p className="text-center mb-4">transcriptx/shared/123</p>
-            <div className="flex justify-center">
-              <button
-                onClick={closeModal}
-                className="py-2 px-6 bg-green-500 text-white rounded-md hover:bg-green-600"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Pop-up for Export */}
-      {showExportModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-            <h2 className="text-xl font-semibold text-center mb-4">Successfully Export Workspace</h2>
-            <div className="flex justify-center">
-              <button
-                onClick={closeModal}
-                className="py-2 px-6 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </>
   );
 };
