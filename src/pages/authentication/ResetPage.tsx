@@ -15,7 +15,7 @@ const ResetPage = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
 
-    const inputStyle = "w-[400px] px-[4px] py-[16px] mt-[8px] mb-[20px] inset-shadow-[1px_1.5px_2px_rgba(0,0,0,0.25)] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
+    const inputStyle = "w-[400px] px-[4px] py-[16px] mt-[8px] mb-[20px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
     const handleReset = async () => {
         setError("");
