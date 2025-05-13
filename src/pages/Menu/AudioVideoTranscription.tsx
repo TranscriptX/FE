@@ -135,7 +135,7 @@ const AudioVideoTranscription = () => {
         </div>
       )}
 
-      <div className="bg-white min-h-screen flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white min-h-screen flex justify-center items-center">
         <div className="bg-white p-[60px] rounded-lg shadow-lg w-full max-w-[450px]">
           <h1 className="text-[36px] font-bold text-center mb-auto">Audio/Video Transcription</h1>
 

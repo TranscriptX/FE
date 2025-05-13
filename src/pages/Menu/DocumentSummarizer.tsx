@@ -64,7 +64,7 @@ const DocumentSummarizer = () => {
           <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
-            <img src={checkSign} alt="check" className="size-[96px]  mb-[12px]" />
+            <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
             
             <div className="flex flex-row items-center">
               {/* Textbox for the link */}
@@ -104,7 +104,7 @@ const DocumentSummarizer = () => {
         </div>
       )}
 
-      <div className="bg-gray-100 min-h-screen flex items-start justify-center py-6 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white min-h-screen flex justify-center items-center">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
           <h1 className="text-3xl font-bold text-center mb-1">Document Summarizer</h1>
 
