@@ -1,9 +1,13 @@
 import { useState } from "react";
 import Navbar from "../../components/Navbar"; // Import Navbar
 import checkSign from "../../assets/check-sign.svg";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Copy from "../../assets/copy.svg"
 
+
 const AudioVideoTranscription = () => {
+  const navigate = useNavigate(); // Initialize the navigate function
+
   const [file, setFile] = useState<File | null>(null);
   const [workspaceTitle, setWorkspaceTitle] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
@@ -44,8 +48,17 @@ const AudioVideoTranscription = () => {
     setShowShareModal(true); // Show the share confirmation modal
   };
 
+  // Change: Export now navigates to the ExportWorkspace page
   const handleExport = () => {
-    setShowExportModal(true); // Show the export confirmation modal
+    const workspaceData = {
+      title: workspaceTitle,
+      description: workspaceDescription,
+      transcription: transcriptionResult,
+      summarizedText: summarizedText,
+      fileName: file ? file.name : "Unnamed File",
+    };
+    // Redirect to the export page with the workspace data
+    navigate("/ExportWorkspace", { state: workspaceData });
   };
 
   const closeModal = () => {

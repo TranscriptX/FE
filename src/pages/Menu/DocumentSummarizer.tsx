@@ -1,18 +1,20 @@
 import { useState } from "react";
 import checkSign from "../../assets/check-sign.svg";
-import Navbar from "../../components/Navbar"; // Import Navbar
+import Navbar from "../../components/Navbar"; 
+import { useNavigate } from "react-router-dom"; 
 import Copy from "../../assets/copy.svg";
 
 const DocumentSummarizer = () => {
+  const navigate = useNavigate(); 
+
   const [file, setFile] = useState<File | null>(null);
   const [workspaceTitle, setWorkspaceTitle] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [summaryResult, setSummaryResult] = useState("");
   const [isSummarized, setIsSummarized] = useState(false);
 
-  // States for pop-up modals
+  
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
 
   const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
@@ -35,13 +37,20 @@ const DocumentSummarizer = () => {
     setShowShareModal(true); // Show the share confirmation modal
   };
 
+  
   const handleExport = () => {
-    setShowExportModal(true); // Show the export confirmation modal
+    const workspaceData = {
+      title: workspaceTitle,
+      description: workspaceDescription,
+      summary: summaryResult,
+      fileName: file ? file.name : "Unnamed File",
+    };
+    // Navigate to ExportWorkspace page with workspace data as state
+    navigate("/ExportWorkspace", { state: workspaceData });
   };
 
   const closeModal = () => {
     setShowShareModal(false);
-    setShowExportModal(false);
   };
 
   return (
@@ -95,27 +104,9 @@ const DocumentSummarizer = () => {
         </div>
       )}
 
-      {/* Modal Pop-up for Export */}
-      {showExportModal && (
-        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
-          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
-            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
-            <p>____________________________________________</p>
-            <button
-              onClick={closeModal}
-              className="bg-ijo text-white font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white min-h-screen flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-[60px] rounded-lg shadow-lg w-full max-w-[450px]">
-          <h1 className="text-[36px] font-bold text-center mb-auto">Document Summarizer</h1>
+      <div className="bg-gray-100 min-h-screen flex items-start justify-center py-6 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
+          <h1 className="text-3xl font-bold text-center mb-1">Document Summarizer</h1>
 
           {/* Deskripsi */}
           <p className="text-center text-lg">Summarize your document with the power of AI</p>
