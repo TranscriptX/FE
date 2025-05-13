@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import ViewWorkspace from './pages/Dashboard/ViewWorkspace';  
 import EditWorkspace from './pages/Dashboard/EditWorkspace';  
 import ExportWorkspace from './pages/Dashboard/ExportWorkspace';  
+import ResetPage from './pages/authentication/ResetPage';
 
 function App() {
   return ( 
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/view-workspace/:id" element={<ViewWorkspace />} />
                 <Route path="/edit-workspace/:id" element={<EditWorkspace />} />
                 <Route path="/ExportWorkspace" element={<ExportWorkspace />} />
+                <Route path="/reset-password" element={<ResetPage />} />
                 {/* <Route path="profile" element={<ProfilePage/>} /> */}
             </Routes>
         </BrowserRouter>
