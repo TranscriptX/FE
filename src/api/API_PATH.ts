@@ -1,2 +1,3 @@
-const API_PATH = "the path for the API";
+export const API_PATH = import.meta.env.VITE_API_PATH;
+
 export default API_PATH;

@@ -52,7 +52,7 @@ const ResetPage = () => {
         <>
             <Navbar currentPage="Reset" />
 
-            {/* Testing */}
+            {/* Testing
             {process.env.NODE_ENV === "development" && (
                 <button
                     onClick={() => {
@@ -67,7 +67,7 @@ const ResetPage = () => {
                 >
                     Simulate Success (Dev)
                 </button>
-            )}
+            )} */}
 
             <div className="min-h-screen flex justify-center items-center bg-white">
                 <div className="z-10 bg-color_secondary w-full max-w-[500px] min-h-[400px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">
