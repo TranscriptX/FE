@@ -36,6 +36,13 @@
     --color-light_pinky: #f072ae;
     --color-biru_muda: #32ADE6;
     --color-minty: #00C7BE;
+    --color-dark_red: #ef5252;
+    --color-kuning: #FFCC00;
+    --color-darker_red: #cd0000;
+    --color-jingga: #FF9500;
+    --color-jingga_hover: #b66a00;
+    --color-minty_dark: #00837d;
+    --color-kuning_dark: #9c7d00;
 
     --font-weight-*: initial;
     --font-weight-bold: 700;

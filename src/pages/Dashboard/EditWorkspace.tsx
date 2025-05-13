@@ -45,6 +45,8 @@ const EditWorkspace = () => {
     navigate("/Dashboard"); // Navigate after stopping the share
   };
 
+  const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
+
   return (
     <>
       <Navbar currentPage="Dashboard" />
@@ -54,19 +56,19 @@ const EditWorkspace = () => {
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
           <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
-            <h2 className="text-xl font-bold mb-0">Are you sure you want to submit?</h2>
+            <h2 className="text-xl font-bold mb-0 max-w-[300px]">Are you sure you want to submit?</h2>
             <p className="text-center mt-4">Ensure all updates are correct before finalizing.</p>
             <p>____________________________________________</p>
-            <div className="flex justify-end space-x-4 mt-4">
+            <div className="flex justify-end space-x-[8px] mb-[8px]">
               <button
                 onClick={closeModal}
-                className="bg-gray-300 text-black font-bold px-5 py-2 rounded hover:bg-gray-400 shadow"
+                className="bg-color_secondary text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmSubmit}
-                className="bg-green-500 text-white font-bold px-5 py-2 rounded hover:bg-green-600 shadow"
+                className="bg-ijo text-white font-bold px-[12px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover hover:border-ijoHover cursor-pointer"
               >
                 Submit
               </button>
@@ -79,19 +81,19 @@ const EditWorkspace = () => {
       {showStopShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
           <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
-          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
-            <h2 className="text-xl font-bold mb-0">Are you sure you want to stop sharing?</h2>
+          <div className="bg-pop rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl max-w-[400px] font-bold mb-0">Are you sure you want to stop sharing?</h2>
             <p>____________________________________________</p>
-            <div className="flex justify-end space-x-4 mt-4">
+            <div className="flex justify-end space-x-[8px] mb-[8px]">
               <button
                 onClick={closeModal}
-                className="bg-gray-300 text-black font-bold px-5 py-2 rounded hover:bg-gray-400 shadow"
+                className="bg-color_secondary text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmStopShare}
-                className="bg-red-600 text-white font-bold px-5 py-2 rounded hover:bg-red-700 shadow"
+                className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
               >
                 Stop Share
               </button>
@@ -100,16 +102,16 @@ const EditWorkspace = () => {
         </div>
       )}
 
-      <div className="bg-gray-100 min-h-screen flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[1000px]">
-          <h1 className="text-3xl font-bold text-center mb-6">Edit Workspace</h1>
-
-          <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="bg-white min-h-screen flex flex-col justify-start items-center">
+        <h1 className="text-3xl font-bold text-center mt-[100px]">EDIT WORKSPACE</h1>
+        <div className="bg-white p-[60px] w-full max-w-[1000px]">
+        
+          <div className="grid grid-cols-2 gap-[24px] mb-6">
             <div>
               <div className="mb-4">
-                <label className="block text-gray-700 font-semibold">Title</label>
+                <label className="block text-black font-[600]">Title</label>
                 <input
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  className={inputStyle}
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -119,9 +121,9 @@ const EditWorkspace = () => {
 
             <div>
               <div className="mb-4">
-                <label className="block text-gray-700 font-semibold">Shared Link</label>
+                <label className="block text-black font-[600]">Shared Link</label>
                 <input
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  className={inputStyle}
                   type="text"
                   value={sharedLink}
                   onChange={(e) => setSharedLink(e.target.value)}
@@ -130,34 +132,34 @@ const EditWorkspace = () => {
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-gray-700 font-semibold">Description</label>
+          <div className="mt-[16px]">
+            <label className="block text-black font-[600]">Description</label>
             <textarea
-              className="w-full px-4 py-2 border border-gray-300 rounded-md"
+              className="font-sans w-full px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none"
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          <div className="flex flex-col items-end space-y-4 mt-6">
-            <div className="flex space-x-4">
+          <div className="flex flex-col items-end space-y-[8px] mt-[16px]">
+            <div className="flex space-x-[8px]">
               <button
                 onClick={handleCancel}
-                className="py-2 px-6 bg-red-500 text-white rounded-md hover:bg-red-600"
+                className="bg-[red] text-white font-bold px-[32px] py-[6px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
-                className="py-2 px-6 bg-green-500 text-white rounded-md hover:bg-green-600"
+                className="bg-ijo text-white font-bold px-[32px] py-[6px] rounded-[4px] border-ijo hover:bg-ijoHover hover:border-ijoHover cursor-pointer"
               >
                 Submit
               </button>
             </div>
             <button
               onClick={handleStopShare}
-              className="py-2 px-6 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+              className="bg-jingga text-white font-bold px-[20px] py-[6px] rounded-[4px] border-jingga hover:bg-jingga_hover hover:border-jingga_hover cursor-pointer"
             >
               Stop Share
             </button>
