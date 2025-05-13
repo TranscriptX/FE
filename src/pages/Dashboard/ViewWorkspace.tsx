@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
+import Copy from "../../assets/copy.svg"
 
 const ViewWorkspace = () => {
   const navigate = useNavigate();
@@ -53,6 +54,10 @@ const ViewWorkspace = () => {
     navigate("/dashboard"); // Navigate back to the dashboard or workspace list
   };
 
+  const inputStyle = "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
+  const textStyle = "block text-black font-[600]"
+  const formStyle = "mb-[18px]"
+
   // Display fallback if no state provided (e.g., user refreshes)
   if (!location.state) {
     return (
@@ -72,39 +77,41 @@ const ViewWorkspace = () => {
           <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
+            <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
             
-            {/* Textbox for the link */}
-            <textarea
-              value="transcriptx/shared/123"  // Link yang akan ditampilkan
-              readOnly  // Agar tidak bisa diubah oleh pengguna
-              className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
-              rows={1}  // Menyesuaikan tinggi textarea
-            />
-            
-            {/* Copy Link Button */}
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText('transcriptx/shared/123') // Link yang akan disalin
-                  .then(() => {
-                    alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
-                  })
-                  .catch(error => {
-                    alert("Failed to copy link. Please try again."); // Menangani error jika gagal
-                  });
-              }}
-              className="py-2 px-6 bg-ijo text-black rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
-            >
-              Copy Link
-            </button>
-            
-            <p>____________________________________________</p>
-            <button
-              onClick={closeModal}
-              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
-            >
-              OK
-            </button>
+            <div className="flex flex-row items-center">
+              {/* Textbox for the link */}
+              <textarea
+                value="transcriptx/shared/123"  // Link yang akan ditampilkan
+                readOnly  // Agar tidak bisa diubah oleh pengguna
+                className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+                rows={1}  // Menyesuaikan tinggi textarea
+              />
+              
+              {/* Copy Link Button */}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText('transcriptx/shared/123') // Link yang akan disalin
+                    .then(() => {
+                      alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
+                    })
+                    .catch(error => {
+                      alert("Failed to copy link. Please try again."); // Menangani error jika gagal
+                    });
+                }}
+                className="py-2 px-6 bg-white border-l-2 border-r-0 border-t-0 border-b-0 text-black rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out cursor-pointer"
+              >
+                <img src={Copy} alt="copy" className="size-[14px]" />
+              </button>
+            </div>
+              
+              <p>____________________________________________</p>
+              <button
+                onClick={closeModal}
+                className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+              >
+                OK
+              </button>              
           </div>
         </div>
       )}
@@ -122,16 +129,16 @@ const ViewWorkspace = () => {
               This action cannot be undone.
             </p>
             <p>____________________________________________</p>
-            <div className="flex justify-end space-x-4 mt-4">
+            <div className="flex justify-end space-x-[8px] mb-[8px]">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="bg-gray-300 text-black font-bold px-5 py-2 rounded hover:bg-gray-400 shadow"
+                className="bg-color_secondary text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="bg-red-600 text-white font-bold px-5 py-2 rounded hover:bg-red-700 shadow"
+                className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
               >
                 Delete
               </button>
@@ -140,34 +147,34 @@ const ViewWorkspace = () => {
         </div>
       )}
 
-      <div className="bg-gray-100 min-h-screen flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[1000px]">
-          <h1 className="text-3xl font-bold text-center mb-6">{title}</h1>
-
-          <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="bg-white min-h-screen flex flex-col justify-start items-center">
+        <h1 className="text-3xl font-bold text-center mt-[100px]">{title}</h1>
+        <div className="bg-white p-[60px] w-full max-w-[1000px]">
+          
+          <div className="grid grid-cols-2 gap-[36px] mb-6">
             <div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold">Author</label>
+              <div className={formStyle}>
+                <label className={textStyle}>Author</label>
                 <input
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  className={inputStyle}
                   type="text"
                   defaultValue={author}
                   readOnly
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold">Created Date</label>
+              <div className={formStyle}>
+                <label className={textStyle}>Created Date</label>
                 <input
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  className={inputStyle}
                   type="text"
                   defaultValue={formattedDate}
                   readOnly
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold">Original File Name</label>
+              <div className={formStyle}>
+                <label className={textStyle}>Original File Name</label>
                 <input
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  className={inputStyle}
                   type="text"
                   defaultValue={originalFileName}
                   readOnly
@@ -176,10 +183,10 @@ const ViewWorkspace = () => {
             </div>
 
             <div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold">Shared Link</label>
+              <div className={formStyle}>
+                <label className={textStyle}>Shared Link</label>
                 <input
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  className={inputStyle}
                   type="text"
                   defaultValue={sharedUrl}
                   readOnly
@@ -188,47 +195,47 @@ const ViewWorkspace = () => {
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-gray-700 font-semibold">Description</label>
+          <div className={formStyle}>
+            <label className={textStyle}>Description</label>
             <textarea
-              className="w-full px-4 py-2 border border-gray-300 rounded-md"
+              className={inputStyle}
               rows={4}
               defaultValue={description}
               readOnly
             />
           </div>
 
-          <div className="mb-6">
-            <label className="block text-gray-700 font-semibold">Result</label>
+          <div className={formStyle}>
+            <label className={textStyle}>Result</label>
             <textarea
-              className="w-full px-4 py-2 border border-gray-300 rounded-md"
+              className={inputStyle}
               rows={4}
               defaultValue={result}
               readOnly
             />
           </div>
 
-          <div className="flex justify-end space-x-4 mb-4">
+          <div className="flex justify-end space-x-[12px]">
             <button
-              className="py-2 px-6 bg-green-500 text-white rounded-md hover:bg-green-600"
+              className="bg-ijo text-white font-bold px-[24px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover hover:border-ijoHover cursor-pointer"
               onClick={handleShare}
             >
               Share
             </button>
             <button
-              className="py-2 px-6 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="bg-minty text-white font-bold px-[24px] py-[4px] rounded-[4px] border-minty hover:bg-minty_dark hover:border-minty_dark cursor-pointer"
               onClick={() => navigate("/ExportWorkspace", { state: data })}
             >
               Export
             </button>
             <button
-              className="py-2 px-6 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+              className="bg-kuning text-white font-bold px-[24px] py-[4px] rounded-[4px] border-kuning hover:bg-kuning_dark hover:border-kuning_dark cursor-pointer"
               onClick={handleEditWorkspace}
             >
               Edit
             </button>
             <button
-              className="py-2 px-6 bg-red-500 text-white rounded-md hover:bg-red-600"
+              className="bg-[red] text-white font-bold px-[24px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
               onClick={handleDelete}
             >
               Delete
