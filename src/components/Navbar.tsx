@@ -83,7 +83,7 @@ const Navbar = (props: NavbarType) => {
 				</ul>
 			</nav>
 
-            {!shouldHideProfile && (
+            {props.currentPage != "None" && !shouldHideProfile && (
             <div className="ml-auto flex items-center h-full ">
                     <button onClick={toggleDropdown} className="border-none bg-color_secondary cursor-pointer items-center pr-[10px]" disabled={!showProfileIcon}>
                         {showProfileIcon && (
