@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEdit, FaLink, FaDownload, FaTrash } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
-import Copy from "../../assets/copy.svg"
+import Copy from "../../assets/copy.svg";
+import { getUserIdFromToken } from "../../utils/Helper";
+import API_PATH from "../../api/API_PATH";
+
 
 const Dashboard = () => {
-  const navigate = useNavigate();
 
   // Data awal
   const initialData = [
@@ -28,45 +30,84 @@ const Dashboard = () => {
     },
   ];
 
-  // Data asli dan yang ditampilkan
-  const [originalList, setOriginalList] = useState(initialData);
-  const [workspaceList, setWorkspaceList] = useState(initialData);
+  const navigate = useNavigate();
+  const [workspaceList, setWorkspaceList] = useState<any[]>([]);
+  const [originalList, setOriginalList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filter states
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [viewFilter, setViewFilter] = useState("All");
 
-  // Modal states
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState<number | null>(null);
 
-  const closeModal = () => {
-    setShowShareModal(false);
-  };
-
+  const closeModal = () => setShowShareModal(false);
   const handleShare = () => setShowShareModal(true);
 
-  // Menambahkan navigasi untuk melihat workspace
+  const fetchWorkspaceData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const userID = getUserIdFromToken(token);
+    if (!userID) return;
+
+    try {
+      // Dummy list workspace ID, ganti ini kalau kamu punya endpoint list ID workspace
+      const workspaceIDs = ["1", "2"];
+
+      const requests = workspaceIDs.map((workspaceID) =>
+        fetch(`${API_PATH}/api/workspaces/detail`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ userID, workspaceID }),
+        }).then((res) => res.json())
+      );
+
+      const responses = await Promise.all(requests);
+      const data = responses
+        .filter((res) => res.statusCode === 200)
+        .map((res, index) => ({
+          id: index + 1, // Buat ID lokal
+          date: new Date(res.payload.createdDate).toISOString().split("T")[0],
+          title: res.payload.title || "Untitled",
+          description: res.payload.description || "-",
+          type: res.payload.type,
+          sharedUrl: res.payload.sharedLink,
+          originalPayload: res.payload, // Simpan data asli kalau perlu
+        }));
+
+      setWorkspaceList(data);
+      setOriginalList(data);
+    } catch (error) {
+      console.error("Failed to fetch workspace data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkspaceData();
+  }, []);
+
   const handleViewWorkspace = (id: number) => {
-    // Temukan workspace berdasarkan id
-    const selectedWorkspace = workspaceList.find((workspace) => workspace.id === id);
-    
-    // Kirim data workspace ke ViewWorkspace
-    navigate(`/view-workspace/${id}`, {
-      state: selectedWorkspace, // Mengirim data workspace melalui state
-    });
+    const selected = workspaceList.find((w) => w.id === id);
+    navigate(`/view-workspace/${id}`, { state: selected });
+  };
+
+  const handleEditWorkspace = (id: number) => {
+    navigate(`/edit-workspace/${id}`);
   };
 
   const handleExport = (id: number) => {
-    const selectedWorkspace = workspaceList.find((workspace) => workspace.id === id);
-    // Mengarahkan ke halaman ExportWorkspace dan mengirim data workspace
-    navigate("/ExportWorkspace", { state: selectedWorkspace });
+    const selected = workspaceList.find((w) => w.id === id);
+    navigate("/ExportWorkspace", { state: selected });
   };
-
-  const handleEditWorkspace = (id: number) => navigate(`/edit-workspace/${id}`);
 
   const handleDelete = (id: number) => {
     setWorkspaceToDelete(id);
@@ -75,35 +116,35 @@ const Dashboard = () => {
 
   const confirmDelete = () => {
     if (workspaceToDelete !== null) {
-      const updatedList = workspaceList.filter((w) => w.id !== workspaceToDelete);
-      setWorkspaceList(updatedList);
-      setOriginalList(updatedList);
+      const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
+      setWorkspaceList(updated);
+      setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
     }
   };
 
   const handleApplyFilters = () => {
-    let filteredList = [...originalList];
+    let filtered = [...originalList];
 
     if (startDate && endDate) {
-      filteredList = filteredList.filter(workspace => {
-        const workspaceDate = new Date(workspace.date);
-        return workspaceDate >= new Date(startDate) && workspaceDate <= new Date(endDate);
+      filtered = filtered.filter(w => {
+        const d = new Date(w.date);
+        return d >= new Date(startDate) && d <= new Date(endDate);
       });
     }
 
     if (typeFilter !== "All") {
-      filteredList = filteredList.filter(workspace => workspace.type === typeFilter);
+      filtered = filtered.filter(w => w.type === typeFilter);
     }
 
     if (viewFilter !== "All") {
-      filteredList = filteredList.filter(workspace =>
-        viewFilter === "Shared" ? workspace.sharedUrl : !workspace.sharedUrl
+      filtered = filtered.filter(w =>
+        viewFilter === "Shared" ? w.sharedUrl : !w.sharedUrl
       );
     }
 
-    setWorkspaceList(filteredList);
+    setWorkspaceList(filtered);
   };
 
   const resetFilters = () => {
@@ -144,7 +185,7 @@ const Dashboard = () => {
                     .then(() => {
                       alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
                     })
-                    .catch(error => {
+                    .catch(() => {
                       alert("Failed to copy link. Please try again."); // Menangani error jika gagal
                     });
                 }}
@@ -172,7 +213,6 @@ const Dashboard = () => {
           <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0 text-red-600">Are you sure?</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
             <p className="break-all max-w-[300px] text-center mb-4 mt-2 text-gray-700">
               Do you want to delete this workspace? 
               <br/>
@@ -268,41 +308,45 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-screen max-w-screen px-[20px] text-sm text-left border-black table-fixed">
-              <thead>
-                <tr>
-                  <th className={styleTable}>No.</th>
-                  <th className={styleTable}>Date</th>
-                  <th className={styleTable}>Title</th>
-                  <th className={styleTable}>Description</th>
-                  <th className={styleTable}>Type</th>
-                  <th className={styleTable}>Shared URL</th>
-                  <th className={styleTable}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {workspaceList.map((workspace, index) => (
-                  <tr key={workspace.id}>
-                    <td className={styleTable}>{index + 1}</td>
-                    <td className={styleTable}>{workspace.date}</td>
-                    <td className={styleTable}>{workspace.title}</td>
-                    <td className={styleTable}>{workspace.description}</td>
-                    <td className={styleTable}>{workspace.type}</td>
-                    <td className={styleTable}>{workspace.sharedUrl || "-"}</td>
-                    <td className="border border-black px-[6px] py-[5px] flex justify-center space-x-[4px]">
-                      <button onClick={() => handleViewWorkspace(workspace.id)} className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"><FaEye /></button>
-                      <button onClick={() => handleEditWorkspace(workspace.id)} className="text-black bg-kuning border-none rounded-[4px] cursor-pointer py-[4px]"><FaEdit /></button>
-                      <button onClick={handleShare} className="text-black bg-minty border-none rounded-[4px] cursor-pointer py-[4px]"><FaLink /></button>
-                      <button onClick={() => handleExport(workspace.id)} className="text-black bg-biru_muda border-none rounded-[4px] cursor-pointer py-[4px]"><FaDownload /></button>
-                      <button onClick={() => handleDelete(workspace.id)} className="text-black bg-dark_red border-none rounded-[4px] cursor-pointer py-[4px]"><FaTrash /></button>
-                    </td>
+          {/* Table */}{
+            loading ? (
+              <p className="text-center">Loading workspaces...</p>
+            ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-screen max-w-screen px-[20px] text-sm text-left border-black table-fixed">
+                <thead>
+                  <tr>
+                    <th className={styleTable}>No.</th>
+                    <th className={styleTable}>Date</th>
+                    <th className={styleTable}>Title</th>
+                    <th className={styleTable}>Description</th>
+                    <th className={styleTable}>Type</th>
+                    <th className={styleTable}>Shared URL</th>
+                    <th className={styleTable}>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {workspaceList.map((w, index) => (
+                    <tr key={index}>
+                      <td className={styleTable}>{index + 1}</td>
+                      <td className={styleTable}>{w.date}</td>
+                      <td className={styleTable}>{w.title}</td>
+                      <td className={styleTable}>{w.description}</td>
+                      <td className={styleTable}>{w.type}</td>
+                      <td className={styleTable}>{w.sharedUrl || "-"}</td>
+                      <td className="border border-black px-[6px] py-[5px] flex justify-center space-x-[4px]">
+                        <button onClick={() => handleViewWorkspace(w.id)} className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"><FaEye /></button>
+                        <button onClick={() => handleEditWorkspace(w.id)} className="text-black bg-kuning border-none rounded-[4px] cursor-pointer py-[4px]"><FaEdit /></button>
+                        <button onClick={handleShare} className="text-black bg-minty border-none rounded-[4px] cursor-pointer py-[4px]"><FaLink /></button>
+                        <button onClick={() => handleExport(w.id)} className="text-black bg-biru_muda border-none rounded-[4px] cursor-pointer py-[4px]"><FaDownload /></button>
+                        <button onClick={() => handleDelete(w.id)} className="text-black bg-dark_red border-none rounded-[4px] cursor-pointer py-[4px]"><FaTrash /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            )}
         </div>
       </div>
     </>

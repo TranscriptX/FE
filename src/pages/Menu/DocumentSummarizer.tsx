@@ -4,6 +4,7 @@ import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import Copy from "../../assets/copy.svg";
 import API_PATH from "../../api/API_PATH";
+import { getUserIdFromToken } from "../../utils/Helper";
 
 const WORKSPACE_SHARE_ENDPOINT = `${API_PATH}/api/workspaces/share`;
 
@@ -43,44 +44,62 @@ const DocumentSummarizer = () => {
 
   // Handle summarize action
   const handleSummarize = async () => {
-    if (file) {
-      try {
-        const fileBase64 = await convertFileToBase64(file);
-        const userID = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
 
-        if (!userID) {
-          alert("User ID not found. Please log in again.");
-          return;
-        }
+    if (!token) {
+      alert("Authorization token not found. Please log in.");
+      return;
+    }
 
-        const payload = {
-          userID,
-          name: workspaceTitle || null,
-          description: workspaceDescription || null,
-          file: fileBase64,
-          workspaceID: null, // workspaceID will be set dynamically after it's created
-        };
+    const userID = getUserIdFromToken(token);
 
-        const response = await fetch(`${API_PATH}/api/tools/summarize`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+    if (!userID) {
+      alert("Invalid token. Please log in again.");
+      return;
+    }
 
-        if (response.ok) {
-          const data = await response.json();
-          setSummaryResult(data.payload.result);
-          setWorkspaceID(data.payload.workspaceID); // Set workspaceID dynamically
-          setIsSummarized(true);
-        } else {
-          alert("Failed to summarize the document. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while summarizing the document.");
+    try {
+      let fileBase64: string | null = null;
+
+      if (file) {
+        fileBase64 = await convertFileToBase64(file);
       }
+
+      // Determine mode: document upload or workspace summarization
+      const payload = {
+        userID,
+        name: workspaceTitle || null,
+        description: workspaceDescription || null,
+        file: fileBase64,                       // Only used for uploaded files
+        workspaceID: workspaceID || null,       // Only used for existing transcription
+      };
+
+      // Enforce API contract: one of file or workspaceID must be null
+      if (!file && !workspaceID) {
+        alert("Please upload a file or choose an existing transcription to summarize.");
+        return;
+      }
+
+      const response = await fetch(`${API_PATH}/api/tools/summarize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSummaryResult(data.payload.result);
+        setIsSummarized(true);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error during summarization:", error);
+      alert("An error occurred while summarizing.");
     }
   };
 
@@ -90,6 +109,7 @@ const DocumentSummarizer = () => {
       const payload = {
         workspaceID: workspaceID, // Using dynamic workspaceID
         isGrantAccess: true, // Set to false to remove share access
+        
       };
 
       try {
