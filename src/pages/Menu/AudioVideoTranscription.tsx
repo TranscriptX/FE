@@ -1,32 +1,32 @@
 import { useState } from "react";
-import Navbar from "../../components/Navbar"; // Import Navbar
+import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import Copy from "../../assets/copy.svg"
+import { useNavigate } from "react-router-dom";
+import Copy from "../../assets/copy.svg";
+import API_PATH from "../../api/API_PATH"; 
 
+const WORKSPACE_SHARE_ENDPOINT = `${API_PATH}/api/workspaces/share`;
 
 const AudioVideoTranscription = () => {
-  const navigate = useNavigate(); // Initialize the navigate function
+  const navigate = useNavigate();
 
   const [file, setFile] = useState<File | null>(null);
   const [workspaceTitle, setWorkspaceTitle] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [transcriptionResult, setTranscriptionResult] = useState("");
-  const [summarizedText, setSummarizedText] = useState(""); // For storing the summarized text
+  const [summarizedText, setSummarizedText] = useState(""); 
   const [isTranscribed, setIsTranscribed] = useState(false);
-  const [isSummarized, setIsSummarized] = useState(false); // To track if summarize was clicked
-
-  const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
-
-  // States for pop-up modals
+  const [isSummarized, setIsSummarized] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
+  const [sharedLink, setSharedLink] = useState("");  // To store the generated link
+
+  const [workspaceID, setWorkspaceID] = useState<string | null>(null); // To store dynamic workspaceID
+
+  const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
-
-      // Reset summarization and transcription if new file is uploaded
       setIsTranscribed(false);
       setIsSummarized(false);
       setTranscriptionResult("");
@@ -34,21 +34,85 @@ const AudioVideoTranscription = () => {
     }
   };
 
-  const handleTranscribe = () => {
-    setTranscriptionResult("Transcription of the audio/video will be here..."); // Placeholder transcription
-    setIsTranscribed(true); // Mark the transcription as done
+  // Convert the file to base64 format for API request
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result?.toString() || "");
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
+  // Handle Transcription
+  const handleTranscribe = async () => {
+    if (file) {
+      try {
+        const fileBase64 = await convertFileToBase64(file);
+        const payload = {
+          userID: "user123", 
+          name: workspaceTitle || null,
+          description: workspaceDescription || null,
+          file: fileBase64
+        };
+
+        const response = await fetch(`${API_PATH}/api/tools/transcript`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setTranscriptionResult(data.payload.result);
+          setWorkspaceID(data.payload.workspaceID); // Set workspaceID dynamically after transcription
+          setIsTranscribed(true);
+        } else {
+          alert("Failed to transcribe the audio/video. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while transcribing the audio/video.");
+      }
+    }
+  };
+
+  // Handle Summarize
   const handleSummarize = () => {
-    setSummarizedText("This is the summarized text based on the transcription."); // Placeholder summarize
+    setSummarizedText("This is the summarized text based on the transcription.");
     setIsSummarized(true);
   };
 
-  const handleShare = () => {
-    setShowShareModal(true); // Show the share confirmation modal
+  // Handle Share - Making API request to share workspace
+  const handleShare = async () => {
+    if (workspaceID) { // Ensure workspaceID is valid
+      const payload = {
+        workspaceID: workspaceID, // Using dynamic workspaceID
+        isGrantAccess: true, // Set to false to remove share access
+      };
+
+      try {
+        const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSharedLink(data.payload.link);  // Set the link in state
+          setShowShareModal(true);
+        } else {
+          alert("Failed to share workspace. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while sharing the workspace.");
+      }
+    }
   };
 
-  // Change: Export now navigates to the ExportWorkspace page
+  // Export workspace data
   const handleExport = () => {
     const workspaceData = {
       title: workspaceTitle,
@@ -57,20 +121,19 @@ const AudioVideoTranscription = () => {
       summarizedText: summarizedText,
       fileName: file ? file.name : "Unnamed File",
     };
-    // Redirect to the export page with the workspace data
     navigate("/ExportWorkspace", { state: workspaceData });
   };
 
+  // Close Modals
   const closeModal = () => {
     setShowShareModal(false);
-    setShowExportModal(false);
   };
 
   return (
     <>
       {/* Navbar */}
       <Navbar currentPage="All Tools" />
-    
+
       {/* Modal Pop-up for Share */}
       {showShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
@@ -78,56 +141,28 @@ const AudioVideoTranscription = () => {
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
-            
             <div className="flex flex-row items-center">
-              {/* Textbox for the link */}
               <textarea
-                value="transcriptx/shared/123"  // Link yang akan ditampilkan
-                readOnly  // Agar tidak bisa diubah oleh pengguna
-                className="w-[200px] border-grey rounded-md text-center"
-                rows={1}  // Menyesuaikan tinggi textarea
+                value={sharedLink} // The shared link
+                readOnly
+                className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+                rows={1}
               />
-              
-              {/* Copy Link Button */}
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText('transcriptx/shared/123') // Link yang akan disalin
-                    .then(() => {
-                      alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
-                    })
-                    .catch(error => {
-                      alert("Failed to copy link. Please try again."); // Menangani error jika gagal
-                    });
+                  navigator.clipboard.writeText(sharedLink) // Copy the link
+                    .then(() => alert("Link copied to clipboard!"))
+                    .catch(() => alert("Failed to copy link. Please try again."));
                 }}
                 className="py-2 px-6 bg-white border-l-2 border-r-0 border-t-0 border-b-0 text-black rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out cursor-pointer"
               >
                 <img src={Copy} alt="copy" className="size-[14px]" />
-              </button>              
+              </button>
             </div>
-            
-            
             <p>____________________________________________</p>
             <button
               onClick={closeModal}
-              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Pop-up for Export */}
-      {showExportModal && (
-        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
-          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
-            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
-            <p>____________________________________________</p>
-            <button
-              onClick={closeModal}
-              className="bg-ijo text-white font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0,2px,3px,rgba(0,0,0,0.25)] cursor-pointer"
             >
               OK
             </button>
@@ -146,7 +181,7 @@ const AudioVideoTranscription = () => {
           <div className="flex flex-col items-center">
             <label className="text-black font-[600] mb-[5px]">Click here to Upload Audio/Video</label>
             <input
-              placeholder='Upload Document'
+              placeholder="Upload Document"
               type="file"
               onChange={handleFileChange}
               accept="audio/*,video/*"
@@ -155,11 +190,9 @@ const AudioVideoTranscription = () => {
             {file && <div className="text-center text-[18px] text-black">{file.name}</div>}
           </div>
 
-          {/* Keterangan file types */}
           <p className="text-start text-[14px] text-darker_grey">Supported extensions: .mp3, .wav, .mp4, .mov, .avi</p>
-          
+
           <div className="flex flex-col items-center">
-            {/* Workspace Title */}
             <div className="mb-[16px]">
               <label className="block text-black font-[600] mb-2">Workspace Title</label>
               <input
@@ -171,7 +204,6 @@ const AudioVideoTranscription = () => {
               />
             </div>
 
-            {/* Workspace Description */}
             <div className="mb-6">
               <label className="block text-black font-[600] mb-2">Workspace Description</label>
               <textarea
@@ -181,16 +213,14 @@ const AudioVideoTranscription = () => {
                 className={inputStyle}
                 rows={4}
               />
-            </div>            
+            </div>
           </div>
-          
 
-          {/* Transcribe Button */}
           <div className="flex justify-end mb-6">
             {!isTranscribed && (
               <button
                 onClick={handleTranscribe}
-                disabled={!file} // Disable if no file is uploaded
+                disabled={!file}
                 className={`py-[8px] px-[24px] mt-[10px] ${!file ? 'bg-color_secondary' : 'bg-pinky text-white hover:ring-1 hover:ring-light_pinky cursor-pointer border-light_pinky'} rounded-[5px] shadow-[0_1px_2px_rgba(240,114,174,0.25)] transition-all duration-400 ease-in-out`}
               >
                 Transcribe
@@ -198,13 +228,7 @@ const AudioVideoTranscription = () => {
             )}
           </div>
 
-          {/* Pemberitahuan untuk upload file
-          {!file && !isTranscribed && (
-            <p className="text-center text-[red] bg-light_red text-sm mt-2">Please upload an audio/video file to transcribe.</p>
-          )} */}
-
           <div className="flex flex-col items-center">
-          {/* Transcription Result */}
             {isTranscribed && (
               <div>
                 <label className="block font-[600] mt-[10px]">Transcription Result:</label>
@@ -215,7 +239,6 @@ const AudioVideoTranscription = () => {
                   rows={6}
                 />
 
-                {/* Summarize Button */}
                 {!isSummarized && (
                   <div className="flex justify-end mb-[12px]">
                     <button
@@ -227,7 +250,6 @@ const AudioVideoTranscription = () => {
                   </div>
                 )}
 
-                {/* Summarized Result */}
                 {isSummarized && (
                   <div className="mt-6">
                     <label className="block font-[600] mt-[10px]">Summarized Result:</label>
@@ -240,7 +262,6 @@ const AudioVideoTranscription = () => {
                   </div>
                 )}
 
-                {/* Share and Export buttons */}
                 <div className="mt-4 flex space-x-[12px] justify-end">
                   <button
                     onClick={handleShare}
@@ -248,14 +269,14 @@ const AudioVideoTranscription = () => {
                   >
                     Share
                   </button>
-                  
+
                   <button onClick={handleExport}
                     className="py-[8px] px-[24px] mt-[10px] bg-minty text-white hover:ring-1 hover:ring-minty cursor-pointer border-minty rounded-[5px] shadow-[0_1px_2px_rgba(0,199,190,0.25)] transition-all duration-400 ease-in-out">
                     Export  
                   </button>
                 </div>
               </div>
-            )}            
+            )}
           </div>
         </div>
       </div>
