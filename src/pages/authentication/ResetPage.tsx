@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
+import API_PATH from "../../api/API_PATH";
 
 const ResetPage = () => {
-    const [searchParams] = useSearchParams();
-    const token = searchParams.get("token");
+    
     const navigate = useNavigate();
+    const [token, setToken] = useState("");
     const [showModal, setShowModal] = useState(false);
 
     const [newPassword, setNewPassword] = useState("");
@@ -19,29 +20,31 @@ const ResetPage = () => {
 
     const handleReset = async () => {
         setError("");
-        if (!newPassword || !confirmPassword) {
+
+        if (!token || !newPassword || !confirmPassword) {
             setError("All fields are required.");
             return;
         }
+
         if (newPassword !== confirmPassword) {
             setError("Passwords do not match.");
             return;
         }
 
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
-        if (!passwordRegex.test(newPassword) && !passwordRegex.test(newPassword)){
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+        if (!passwordRegex.test(newPassword)){
             setError("Password must be at least 8 characters long, contain at least one lowercase letter, one uppercase letter, and one number.");
             return;
         }
 
         try {
-            const response = await axios.post("/api/reset-password", {
+            const response = await axios.post(`${API_PATH}/api/auth/reset-password`, {
                 token,
-                newPassword,
+                new_password: newPassword,
             });
 
             if (response.status === 200) {
-                setSuccess(true);
+                setShowModal(true);
             }
         } catch (err) {
             setError("Reset failed. Token may be expired or invalid.");
@@ -52,7 +55,7 @@ const ResetPage = () => {
         <>
             <Navbar currentPage="Reset" />
 
-            {/* Testing */}
+            {/* Testing
             {process.env.NODE_ENV === "development" && (
                 <button
                     onClick={() => {
@@ -67,10 +70,10 @@ const ResetPage = () => {
                 >
                     Simulate Success (Dev)
                 </button>
-            )}
+            )} */}
 
             <div className="min-h-screen flex justify-center items-center bg-white">
-                <div className="z-10 bg-color_secondary w-full max-w-[500px] min-h-[400px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">
+                <div className="z-10 bg-color_secondary w-full max-w-[500px] min-h-[450px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">
                     <form
                         className="space-y-[12px] flex flex-col items-center"
                         onSubmit={(e) => {
@@ -80,6 +83,13 @@ const ResetPage = () => {
                     >
                         <h1 className="text-2xl font-bold mb-4 text-center mt-[50px]">Reset Your Password</h1>
                         {error && <p className="text-[red] px-[4px] py-[4px] mb-[10px] ml-[42px] mr-[42px] bg-light_red max-w-[400px]">{error}</p>}
+                        <input 
+                            type="text" 
+                            placeholder="Enter reset token from email"
+                            value={token}
+                            onChange={(e) => setToken(e.target.value)}
+                            className={inputStyle}
+                        />
                         <input
                             type="password"
                             placeholder="New password"
