@@ -59,8 +59,9 @@ const Navbar = (props: NavbarType) => {
                 <span className="text-[36px] drop-shadow-[0_2px_1px_rgba(0,0,0,0.4)]">X</span>
             </div>
 
-            <nav>
+			<nav>
 				<ul className="flex flex-row space-x-6 list-none items-center">
+
 					{links.map((item, index) => {
                         return (
 							<li key={index} className="mx-[12px]">
