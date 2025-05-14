@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
+import API_PATH from "../../api/API_PATH";
 
 const ForgotPage = () => {
     const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ const ForgotPage = () => {
         setError("");
 
         try{
-            const response = await axios.post("API UNTUK KIRIM EMAIL VERIF", {
+            const response = await axios.post(`${API_PATH}/api/auth/request-password-reset`, {
                 email: email,
             });
 
@@ -75,9 +76,6 @@ const ForgotPage = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 className={inputStyle}
                             />
-
-
-
                             <div>
                                 <button
                                     type="submit"

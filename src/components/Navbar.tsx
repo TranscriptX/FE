@@ -12,7 +12,6 @@ const Navbar = (props: NavbarType) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [showProfileIcon, setShowProfileIcon] = useState(true);
     const [userName, setUserName] = useState("User");
-    const [tokenValid, setTokenValid] = useState(true);
 
     const hideProfileForPages = ["Login", "Register", "Forgot", "Reset"];
     const shouldHideProfile = hideProfileForPages.includes(props.currentPage);
@@ -35,7 +34,7 @@ const Navbar = (props: NavbarType) => {
 
     const logout = () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("name")
+        localStorage.removeItem("userId")
         navigate("/login");
     };
 

@@ -105,7 +105,7 @@ const DocumentSummarizer = () => {
       )}
 
       <div className="bg-white min-h-screen flex justify-center items-center">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[450px] mt-4">
           <h1 className="text-3xl font-bold text-center mb-1">Document Summarizer</h1>
 
           {/* Deskripsi */}
