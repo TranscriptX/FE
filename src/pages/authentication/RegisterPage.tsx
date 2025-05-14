@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import Navbar from "../../components/Navbar";
 import ExpandingCard from "../../components/ExpandingCard";
+import { API_PATH } from "../../api/API_PATH";
+import checkSign from "../../assets/check-sign.svg";
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
@@ -15,6 +17,7 @@ const RegisterPage = () => {
     const[error, setError] = useState("");
     const[successMessage, setSuccessMessage] = useState("");
     const navigate = useNavigate();
+    const [showModal, setShowModal] = useState(false);
     const inputStyle = "w-[400px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +32,8 @@ const RegisterPage = () => {
 
         const { name, email, password, confirmPassword } = formData;
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
         if (!name || !email || !password || !confirmPassword) {
             setError("Please fill in all the fields.");
             return;
@@ -38,15 +43,20 @@ const RegisterPage = () => {
             return;
         }
 
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        if (!emailRegex.test(email)) {
+            setError("Invalid email format");
+            return;
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
         if (!passwordRegex.test(password)){
-            setError("Password must be at least 8 characters long, contain at least one lowercase letter, one uppercase letter, and one number.");
+            setError("Password must be at least 8 characters long, contain at least one lowercase letter, one uppercase letter, one number, and one special character.");
             return;
         }
 
         try{
             setLoading(true);
-            const response = await fetch("URL API UTK REGISTER", {
+            const response = await fetch(`${API_PATH}/api/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -58,17 +68,17 @@ const RegisterPage = () => {
 
             const result = await response.json();
 
-            if (response.ok){
-                setSuccessMessage(result.message);
+            if (result.message === "User registered, please verify your email."){
+                setShowModal(true);
                 setFormData({
                     name: "",
                     email: "",
                     password: "",
                     confirmPassword: "",
                 });
-                navigate("../login");
-            }else{
-                setError(result.message || "Something went wrong. Please try again.");
+            }else if (result.message === "Email already registered") {
+                setError("An account with this email already exists.");
+                setShowModal(false);
             }
         }catch(err){
             setError("Failed to register. Please check your network connection.");
@@ -156,6 +166,30 @@ const RegisterPage = () => {
                     </a>
                     </p>
                 </div>
+
+                {showModal && (
+                    <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+                        <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen">
+
+                        </div>
+                        <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+                            <h2 className="text-xl font-bold mb-0">Success!</h2>
+                            <img src={checkSign} alt="check" className="size-[96px]" />
+                            <p className="break-all max-w-[290px] text-center mb-auto flex flex-col items-center"><strong>A verification email has been sent.</strong>
+                                Please check your inbox and verify your email before logging in.</p>
+                            <p>____________________________________________</p>
+                            <button
+                                onClick={() => {
+                                    setShowModal(false);
+                                    navigate(`/login`);
+                                }}
+                                className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
         

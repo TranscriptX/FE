@@ -202,7 +202,7 @@ const Dashboard = () => {
         <h1 className="text-[48px] text-center font-bold text-center mb-[60px] mt-[100px]">Dashboard</h1>
         <div className="bg-white w-full max-w-[2000px]">
           {/* Filter Section */}
-          <div className="flex flex-col justify-between mb-[50px] gap-[16px]">
+          <div className="flex flex-col justify-between mb-[50px] gap-[16px] pl-[25px]">
             <div className="flex flex-row gap-[16px]">
               <div className="flex flex-col items-start gap-2">
                 <label className="font-semibold">Start Date:</label>
@@ -270,7 +270,7 @@ const Dashboard = () => {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left border border-black table-fixed">
+            <table className="min-w-screen max-w-screen px-[20px] text-sm text-left border-black table-fixed">
               <thead>
                 <tr>
                   <th className={styleTable}>No.</th>

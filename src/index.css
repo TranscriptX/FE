@@ -5,6 +5,7 @@
 @layer base {
 	body {
 		font-family: 'IBM Plex Sans';
+        margin: 0;
 	}
 
     input[type="file"]::-webkit-file-upload-button {

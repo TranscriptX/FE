@@ -4,6 +4,8 @@ import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 import ExpandingCardLogin from "../../components/ExpandingCardLogin";
+import API_PATH from "../../api/API_PATH";
+import { decodeJWT } from "../../utils/Helper";
 
 
 const LoginPage = () => {
@@ -14,18 +16,28 @@ const LoginPage = () => {
     const authContext = useContext(AuthContext)
 
     const handleLogin = async() => {
+        setError("");
+        if (!email || !password) {
+            setError("Please enter both email and password.");
+            return;
+        }
+
         try{
-            const response = await axios.post("URL UTK API LOGIN", {
+            const response = await axios.post(`${API_PATH}/api/auth/login`, {
                 email: email,
                 password: password,
             });
 
-            const { access_token } = response.data;
-            localStorage.setItem("token", access_token)
+            const token = response.data.payload.access_token;
+            const decoded = decodeJWT(token);
+            const userId = decoded.payload.sub;
 
-            authContext?.updateTokenHandler(access_token);
+            localStorage.setItem("token", token);
+            localStorage.setItem("userId", userId);
+
+            authContext?.updateTokenHandler(token);
             alert("Login successful!");
-            navigate("./Tools")
+            navigate("/Tools")
         }catch (err){
             setError("Login failed. Please check your email and password.");
         }
