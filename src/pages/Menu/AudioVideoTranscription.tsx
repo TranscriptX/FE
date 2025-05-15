@@ -4,6 +4,7 @@ import checkSign from "../../assets/check-sign.svg";
 import { useNavigate } from "react-router-dom";
 import Copy from "../../assets/copy.svg";
 import API_PATH from "../../api/API_PATH"; 
+import { getUserIdFromToken } from "../../utils/Helper";
 
 const WORKSPACE_SHARE_ENDPOINT = `${API_PATH}/api/workspaces/share`;
 
@@ -18,8 +19,7 @@ const AudioVideoTranscription = () => {
   const [isTranscribed, setIsTranscribed] = useState(false);
   const [isSummarized, setIsSummarized] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [sharedLink, setSharedLink] = useState("");  // To store the generated link
-
+  const [sharedLink, setSharedLink] = useState("");  
   const [workspaceID, setWorkspaceID] = useState<string | null>(null); // To store dynamic workspaceID
 
   const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none";
@@ -48,24 +48,39 @@ const AudioVideoTranscription = () => {
   const handleTranscribe = async () => {
     if (file) {
       try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("User not authenticated.");
+          return;
+        }
+
+        const userID = getUserIdFromToken(token);
+        if (!userID) {
+          alert("Invalid token. Cannot extract user ID.");
+          return;
+        }
+
         const fileBase64 = await convertFileToBase64(file);
+
         const payload = {
-          userID: "user123", 
+          userID: userID,
           name: workspaceTitle || null,
           description: workspaceDescription || null,
-          file: fileBase64
+          file: fileBase64,
         };
 
         const response = await fetch(`${API_PATH}/api/tools/transcript`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+          body: JSON.stringify(payload),
         });
 
         if (response.ok) {
           const data = await response.json();
           setTranscriptionResult(data.payload.result);
-          setWorkspaceID(data.payload.workspaceID); // Set workspaceID dynamically after transcription
           setIsTranscribed(true);
         } else {
           alert("Failed to transcribe the audio/video. Please try again.");
@@ -78,10 +93,73 @@ const AudioVideoTranscription = () => {
   };
 
   // Handle Summarize
-  const handleSummarize = () => {
-    setSummarizedText("This is the summarized text based on the transcription.");
-    setIsSummarized(true);
-  };
+  const handleSummarize = async () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Authorization token not found. Please log in.");
+    return;
+  }
+
+  const userID = getUserIdFromToken(token);
+
+  if (!userID) {
+    alert("Invalid token. Please log in again.");
+    return;
+  }
+
+  try {
+    let fileBase64: string | null = null;
+
+    if (transcriptionResult) {
+      // Convert transcription text into a Blob (like a .txt file)
+      const blob = new Blob([transcriptionResult], { type: "text/plain" });
+
+      // Convert blob to Base64
+      fileBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // Validate input
+    if (!fileBase64 && !workspaceID) {
+      alert("No transcription or workspaceID available for summarization.");
+      return;
+    }
+
+    const payload = {
+      userID,
+      name: workspaceTitle || null,
+      description: workspaceDescription || null,
+      file: fileBase64,
+      workspaceID: null, // because we're summarizing new transcription, not existing workspace
+    };
+
+    const response = await fetch(`${API_PATH}/api/tools/summarize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setSummarizedText(data.payload.result);
+      setIsSummarized(true);
+    } else {
+      const errorData = await response.json();
+      alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+    }
+  } catch (error) {
+    console.error("Error during summarization:", error);
+    alert("An error occurred while summarizing.");
+  }
+};
 
   // Handle Share - Making API request to share workspace
   const handleShare = async () => {
