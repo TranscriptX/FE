@@ -1,43 +1,139 @@
 import { useState } from "react";
 import checkSign from "../../assets/check-sign.svg";
-import Navbar from "../../components/Navbar"; 
-import { useNavigate } from "react-router-dom"; 
+import Navbar from "../../components/Navbar";
+import { useNavigate } from "react-router-dom";
 import Copy from "../../assets/copy.svg";
+import API_PATH from "../../api/API_PATH";
+import { getUserIdFromToken } from "../../utils/Helper";
+
+const WORKSPACE_SHARE_ENDPOINT = `${API_PATH}/api/workspaces/share`;
 
 const DocumentSummarizer = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const [file, setFile] = useState<File | null>(null);
   const [workspaceTitle, setWorkspaceTitle] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [summaryResult, setSummaryResult] = useState("");
   const [isSummarized, setIsSummarized] = useState(false);
-
   
+  const [workspaceID, setWorkspaceID] = useState<string | null>(null); // Dynamically set workspaceID
   const [showShareModal, setShowShareModal] = useState(false);
+  const [sharedLink, setSharedLink] = useState(""); // To store the generated link
 
-  const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
+  const inputStyle =
+    "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
-  // Handle file change, and reset summarization if a new file is uploaded
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
-      // Reset summarization if a new file is uploaded
       setIsSummarized(false);
       setSummaryResult("");
     }
   };
 
-  const handleSummarize = () => {
-    setSummaryResult("Pak Henry Lucky panutanku"); // Placeholder summary
-    setIsSummarized(true);
+  // Convert file to base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result?.toString() || "");
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
-  const handleShare = () => {
-    setShowShareModal(true); // Show the share confirmation modal
+  // Handle summarize action
+  const handleSummarize = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Authorization token not found. Please log in.");
+      return;
+    }
+
+    const userID = getUserIdFromToken(token);
+
+    if (!userID) {
+      alert("Invalid token. Please log in again.");
+      return;
+    }
+
+    try {
+      let fileBase64: string | null = null;
+
+      if (file) {
+        fileBase64 = await convertFileToBase64(file);
+      }
+
+      // Determine mode: document upload or workspace summarization
+      const payload = {
+        userID,
+        name: workspaceTitle || null,
+        description: workspaceDescription || null,
+        file: fileBase64,                       // Only used for uploaded files
+        workspaceID: workspaceID || null,       // Only used for existing transcription
+      };
+
+      // Enforce API contract: one of file or workspaceID must be null
+      if (!file && !workspaceID) {
+        alert("Please upload a file or choose an existing transcription to summarize.");
+        return;
+      }
+
+      const response = await fetch(`${API_PATH}/api/tools/summarize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSummaryResult(data.payload.result);
+        setIsSummarized(true);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error during summarization:", error);
+      alert("An error occurred while summarizing.");
+    }
   };
 
-  
+  // Handle Share - Making API request to share workspace
+  const handleShare = async () => {
+    if (workspaceID) { // Ensure workspaceID is valid
+      const payload = {
+        workspaceID: workspaceID, // Using dynamic workspaceID
+        isGrantAccess: true, // Set to false to remove share access
+        
+      };
+
+      try {
+        const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSharedLink(data.payload.link);  // Set the link in state
+          setShowShareModal(true);
+        } else {
+          alert("Failed to share workspace. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while sharing the workspace.");
+      }
+    }
+  };
+
+  // Export workspace data
   const handleExport = () => {
     const workspaceData = {
       title: workspaceTitle,
@@ -45,10 +141,10 @@ const DocumentSummarizer = () => {
       summary: summaryResult,
       fileName: file ? file.name : "Unnamed File",
     };
-    // Navigate to ExportWorkspace page with workspace data as state
     navigate("/ExportWorkspace", { state: workspaceData });
   };
 
+  // Close Modals
   const closeModal = () => {
     setShowShareModal(false);
   };
@@ -57,7 +153,7 @@ const DocumentSummarizer = () => {
     <>
       {/* Navbar */}
       <Navbar currentPage="All Tools" />
-    
+
       {/* Modal Pop-up for Share */}
       {showShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
@@ -65,38 +161,28 @@ const DocumentSummarizer = () => {
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
-            
             <div className="flex flex-row items-center">
-              {/* Textbox for the link */}
               <textarea
-                value="transcriptx/shared/123"  // Link yang akan ditampilkan
-                readOnly  // Agar tidak bisa diubah oleh pengguna
+                value={sharedLink} // The shared link
+                readOnly
                 className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
-                rows={1}  // Menyesuaikan tinggi textarea
+                rows={1}
               />
-              
-              {/* Copy Link Button */}
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText('transcriptx/shared/123') // Link yang akan disalin
-                    .then(() => {
-                      alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
-                    })
-                    .catch(error => {
-                      alert("Failed to copy link. Please try again."); // Menangani error jika gagal
-                    });
+                  navigator.clipboard.writeText(sharedLink) // Copy the link
+                    .then(() => alert("Link copied to clipboard!"))
+                    .catch(() => alert("Failed to copy link. Please try again."));
                 }}
                 className="py-2 px-6 bg-white border-l-2 border-r-0 border-t-0 border-b-0 text-black rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out cursor-pointer"
               >
                 <img src={Copy} alt="copy" className="size-[14px]" />
-              </button>              
+              </button>
             </div>
-            
-            
             <p>____________________________________________</p>
             <button
               onClick={closeModal}
-              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0,2px,3px,rgba(0,0,0,0.25)] cursor-pointer"
             >
               OK
             </button>
@@ -105,29 +191,24 @@ const DocumentSummarizer = () => {
       )}
 
       <div className="bg-white min-h-screen flex justify-center items-center">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[450px] mt-4">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
           <h1 className="text-3xl font-bold text-center mb-1">Document Summarizer</h1>
-
-          {/* Deskripsi */}
           <p className="text-center text-lg">Summarize your document with the power of AI</p>
 
-          {/* File Input */}
           <div className="flex flex-col items-center">
             <label className="text-black font-[600] mb-[5px]">Click here to Upload Document</label>
             <input
               type="file"
               onChange={handleFileChange}
               accept=".txt,.doc,.docx,.pdf"
-              className="w-full text-darker_grey text-[18px] bg-color_secondary border-2 border-dark_grey rounded-[5px] p-[20px] cursor-pointer shadow-[0_1px_4px_rgba(0,0,0,0.25)] hover:border-dark_grey hover:ring-2 hover:ring-dark_grey focus:ring-2 focus:ring-dark_grey"
+              className="w-full text-darker_grey text-[18px] bg-color_secondary border-2 border-dark_grey rounded-[5px] p-[20px] cursor-pointer shadow-[0,1px,4px,rgba(0,0,0,0.25)] hover:border-dark_grey hover:ring-2 hover:ring-dark_grey focus:ring-2 focus:ring-dark_grey"
             />
             {file && <div className="text-center text-[18px] text-black">{file.name}</div>}
           </div>
 
-          {/* Keterangan file types */}
           <p className="text-start text-[14px] text-darker_grey">Supported extensions: .txt, .doc, .docx, .pdf</p>
 
           <div className="flex flex-col items-center">
-            {/* Workspace Title */}
             <div className="mb-[16px]">
               <label className="block text-black font-[600] mb-2">Workspace Title</label>
               <input
@@ -139,7 +220,6 @@ const DocumentSummarizer = () => {
               />
             </div>
 
-            {/* Workspace Description */}
             <div className="mb-6">
               <label className="block text-black font-[600] mb-2">Workspace Description</label>
               <textarea
@@ -149,30 +229,22 @@ const DocumentSummarizer = () => {
                 className={inputStyle}
                 rows={4}
               />
-            </div>            
+            </div>
           </div>
-          
 
-          {/* Summarize Button */}
           {!isSummarized && (
             <div className="flex justify-end mb-6">
               <button
                 onClick={handleSummarize}
-                disabled={!file} // Disable button if no file is uploaded
-                className={`py-[8px] px-[24px] mt-[10px] ${!file ? 'bg-color_secondary' : 'bg-biru_muda text-white hover:ring-1 hover:ring-biru_muda cursor-pointer border-biru_muda'} rounded-[5px] shadow-[0_1px_5px_rgba(50,173,230,0.25)] transition-all duration-400 ease-in-out`}
+                disabled={!file}
+                className={`py-[8px] px-[24px] mt-[10px] ${!file ? 'bg-color_secondary' : 'bg-biru_muda text-white hover:ring-1 hover:ring-biru_muda cursor-pointer border-biru_muda'} rounded-[5px] shadow-[0,1px,5px,rgba(50,173,230,0.25)] transition-all duration-400 ease-in-out`}
               >
                 Summarize
               </button>
             </div>
           )}
 
-          {/* Display message to upload file if none is selected
-          {!file && !isSummarized && (
-            <p className="text-center text-[red] bg-light_red text-sm mt-2">Please upload a document to summarize.</p>
-          )} */}
-
           <div className="flex justify-center mb-6">
-            {/* Summary Result */}
             {isSummarized && (
               <div className="mt-4">
                 <label className="block font-[600] mt-[10px]">Summary Result:</label>
@@ -182,26 +254,23 @@ const DocumentSummarizer = () => {
                   className={inputStyle}
                   rows={6}
                 />
-                {/* Share and Export buttons */}
                 <div className="mt-4 flex space-x-[12px] justify-end">
                   <button
                     onClick={handleShare}
-                    className="py-[8px] px-[24px] mt-[10px] bg-ijo text-white hover:ring-1 hover:ring-ijo cursor-pointer border-ijo rounded-[5px] shadow-[0_1px_5px_rgba(52,199,89,0.25)] transition-all duration-400 ease-in-out"
+                    className="py-[8px] px-[24px] mt-[10px] bg-ijo text-white hover:ring-1 hover:ring-ijo cursor-pointer border-ijo rounded-[5px] shadow-[0,1px,5px,rgba(52,199,89,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Share
                   </button>
                   <button
                     onClick={handleExport}
-                    className="py-[8px] px-[24px] mt-[10px] bg-minty text-white hover:ring-1 hover:ring-minty cursor-pointer border-minty rounded-[5px] shadow-[0_1px_2px_rgba(0,199,190,0.25)] transition-all duration-400 ease-in-out"
+                    className="py-[8px] px-[24px] mt-[10px] bg-minty text-white hover:ring-1 hover:ring-minty cursor-pointer border-minty rounded-[5px] shadow-[0,1px,2px,rgba(0,199,190,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Export
                   </button>
                 </div>
               </div>
-            )}            
+            )}
           </div>
-
-          
         </div>
       </div>
     </>
