@@ -82,8 +82,9 @@ const AudioVideoTranscription = () => {
         if (response.ok) {
           const data = await response.json();
           setTranscriptionResult(data.payload.result);
-          setWorkspaceID(data.payload.workspaceID || null); // Set workspaceID from backend
+          setWorkspaceID(data.payload.workspaceID || null);
           setIsTranscribed(true);
+          setFile(null); // RESET FILE agar summarize pakai workspaceID
         } else {
           alert("Failed to transcribe the audio/video. Please try again.");
         }
@@ -97,14 +98,12 @@ const AudioVideoTranscription = () => {
   // Handle Summarize
   const handleSummarize = async () => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       alert("Authorization token not found. Please log in.");
       return;
     }
 
     const userID = getUserIdFromToken(token);
-
     if (!userID) {
       alert("Invalid token. Please log in again.");
       return;
@@ -113,32 +112,33 @@ const AudioVideoTranscription = () => {
     try {
       let fileBase64: string | null = null;
 
-      if (file) {
-        // User uploaded a file to summarize
+      // Kirim file hanya kalau ada file dan belum ada workspaceID
+      if (file && !workspaceID) {
         fileBase64 = await convertFileToBase64(file);
       }
 
-      // Enforce API rule: Either file or workspaceID must be set, but not both
       if (!fileBase64 && !workspaceID) {
         alert("Please upload a file or use an existing transcription to summarize.");
         return;
       }
 
-      const payload = fileBase64
+      const payload = workspaceID
         ? {
-            userID,
-            name: workspaceTitle || null,
-            description: workspaceDescription || null,
-            file: fileBase64,
-            workspaceID: null,
-          }
-        : {
             userID,
             name: workspaceTitle || null,
             description: workspaceDescription || null,
             file: null,
             workspaceID: workspaceID,
+          }
+        : {
+            userID,
+            name: workspaceTitle || null,
+            description: workspaceDescription || null,
+            file: fileBase64,
+            workspaceID: null,
           };
+
+      console.log("Summarize payload:", payload); // Debug
 
       const response = await fetch(`${API_PATH}/api/tools/summarize`, {
         method: "POST",
@@ -166,6 +166,12 @@ const AudioVideoTranscription = () => {
   // Handle Share - Making API request to share workspace
   const handleShare = async () => {
     if (workspaceID) {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("User not authenticated.");
+        return;
+      }
+
       const payload = {
         workspaceID: workspaceID,
         isGrantAccess: true,
@@ -174,7 +180,10 @@ const AudioVideoTranscription = () => {
       try {
         const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
         });
 
