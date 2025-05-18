@@ -1,117 +1,211 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEdit, FaLink, FaDownload, FaTrash } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
-import Copy from "../../assets/copy.svg"
+import Copy from "../../assets/copy.svg";
+import { getUserIdFromToken } from "../../utils/Helper";
+import API_PATH from "../../api/API_PATH";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+  const [workspaceList, setWorkspaceList] = useState<any[]>([]);
+  const [originalList, setOriginalList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Data awal
-  const initialData = [
-    {
-      id: 1,
-      date: "2025-04-23",
-      title: "Nasi Padang",
-      description: "Makanan enak khas padang",
-      type: "Summarization",
-      sharedUrl: "transcriptx.com/shared/link",
-    },
-    {
-      id: 2,
-      date: "2025-04-26",
-      title: "Bakmi Effata",
-      description: "Deskripsi isi bakmie",
-      type: "Transcription",
-      sharedUrl: "",
-    },
-  ];
-
-  // Data asli dan yang ditampilkan
-  const [originalList, setOriginalList] = useState(initialData);
-  const [workspaceList, setWorkspaceList] = useState(initialData);
-
-  // Filter states
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [viewFilter, setViewFilter] = useState("All");
 
-  // Modal states
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [workspaceToDelete, setWorkspaceToDelete] = useState<number | null>(null);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
+  const [sharedLinkToShow, setSharedLinkToShow] = useState<string>("");
 
-  const closeModal = () => {
-    setShowShareModal(false);
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
+  const userID = token ? getUserIdFromToken(token) : null;
+
+  const fetchWorkspaceData = async () => {
+    if (!token || !userID) {
+      setError("User not authenticated");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const body = {
+        userID,
+        startDate: startDate || null,
+        endDate: endDate || null,
+        search: null,
+        type: typeFilter === "All" ? null : typeFilter,
+        sharedStatus:
+          viewFilter === "All"
+            ? null
+            : viewFilter === "Shared"
+            ? true
+            : false,
+        sortBy: null,
+        sortOrder: null,
+      };
+
+      const res = await fetch(`${API_PATH}/api/workspaces/dashboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to fetch: ${res.status} ${text}`);
+      }
+
+      const data = await res.json();
+
+      if (data.statusCode !== 200) throw new Error(data.message || "Failed to fetch");
+
+      // Map response to format yang dipakai UI
+      const list = data.payload.map((item: any) => ({
+        id: item.workspaceID,
+        date: item.createdDate.split("T")[0],
+        title: item.title,
+        description: item.description,
+        type: item.type,
+        sharedUrl: item.link || "-",
+        originalPayload: item, // simpan data asli supaya bisa dikirim ke state
+      }));
+
+      setWorkspaceList(list);
+      setOriginalList(list);
+    } catch (err: any) {
+      setError(err.message || "Error fetching workspaces");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleShare = () => setShowShareModal(true);
+  useEffect(() => {
+    fetchWorkspaceData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Menambahkan navigasi untuk melihat workspace
-  const handleViewWorkspace = (id: number) => {
-    // Temukan workspace berdasarkan id
-    const selectedWorkspace = workspaceList.find((workspace) => workspace.id === id);
-    
-    // Kirim data workspace ke ViewWorkspace
-    navigate(`/view-workspace/${id}`, {
-      state: selectedWorkspace, // Mengirim data workspace melalui state
-    });
+  // Delete workspace API (multiple IDs possible)
+  const deleteWorkspace = async (workspaceIDs: string[]) => {
+    if (!token || !userID) return false;
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID: workspaceIDs, userID }),
+      });
+      if (res.status !== 204) throw new Error("Failed to delete workspace");
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
-  const handleExport = (id: number) => {
-    const selectedWorkspace = workspaceList.find((workspace) => workspace.id === id);
-    // Mengarahkan ke halaman ExportWorkspace dan mengirim data workspace
-    navigate("/ExportWorkspace", { state: selectedWorkspace });
+  const confirmDelete = async () => {
+    if (!workspaceToDelete) return;
+    const success = await deleteWorkspace([workspaceToDelete]);
+    if (success) {
+      const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
+      setWorkspaceList(updated);
+      setOriginalList(updated);
+      setWorkspaceToDelete(null);
+      setShowDeleteModal(false);
+    } else {
+      alert("Failed to delete workspace. Please try again.");
+    }
   };
 
-  const handleEditWorkspace = (id: number) => navigate(`/edit-workspace/${id}`);
-
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setWorkspaceToDelete(id);
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    if (workspaceToDelete !== null) {
-      const updatedList = workspaceList.filter((w) => w.id !== workspaceToDelete);
-      setWorkspaceList(updatedList);
-      setOriginalList(updatedList);
-      setWorkspaceToDelete(null);
-      setShowDeleteModal(false);
+  // Share workspace API
+  const shareWorkspace = async (workspaceID: string) => {
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID, isGrantAccess: true }),
+      });
+      if (!res.ok) throw new Error("Failed to share workspace");
+      const data = await res.json();
+      return data.payload?.link || null;
+    } catch (err) {
+      console.error(err);
+      return null;
     }
   };
 
+  const handleShare = async (currentLink: string, workspaceID: string) => {
+    if (currentLink && currentLink !== "-") {
+      setSharedLinkToShow(currentLink);
+      setShowShareModal(true);
+    } else {
+      const link = await shareWorkspace(workspaceID);
+      if (link) {
+        setSharedLinkToShow(link);
+        setShowShareModal(true);
+        const updated = workspaceList.map((w) =>
+          w.id === workspaceID ? { ...w, sharedUrl: link } : w
+        );
+        setWorkspaceList(updated);
+        setOriginalList(updated);
+      } else {
+        alert("Failed to create share link");
+      }
+    }
+  };
+
+  // Navigation handlers
+  const handleViewWorkspace = (id: string) => {
+    // Cari workspace yang dipilih
+    const selected = workspaceList.find((w) => w.id === id);
+    if (selected) {
+      // Kirim data lengkap (originalPayload) ke state saat navigate
+      navigate(`/view-workspace/${id}`, { state: selected.originalPayload });
+    }
+  };
+
+  const handleEditWorkspace = (id: string) => {
+    navigate(`/edit-workspace/${id}`);
+  };
+
+  const handleExport = (id: string) => {
+    const selected = workspaceList.find((w) => w.id === id);
+    if (selected) navigate("/ExportWorkspace", { state: selected.originalPayload });
+  };
+
+  // Filtering
   const handleApplyFilters = () => {
-    let filteredList = [...originalList];
-
-    if (startDate && endDate) {
-      filteredList = filteredList.filter(workspace => {
-        const workspaceDate = new Date(workspace.date);
-        return workspaceDate >= new Date(startDate) && workspaceDate <= new Date(endDate);
-      });
-    }
-
-    if (typeFilter !== "All") {
-      filteredList = filteredList.filter(workspace => workspace.type === typeFilter);
-    }
-
-    if (viewFilter !== "All") {
-      filteredList = filteredList.filter(workspace =>
-        viewFilter === "Shared" ? workspace.sharedUrl : !workspace.sharedUrl
-      );
-    }
-
-    setWorkspaceList(filteredList);
+    fetchWorkspaceData();
   };
 
   const resetFilters = () => {
-    setWorkspaceList([...originalList]);
     setStartDate("");
     setEndDate("");
     setTypeFilter("All");
     setViewFilter("All");
+    fetchWorkspaceData();
   };
 
   const styleTable = "border border-black px-[6px] py-[3px]";
@@ -120,44 +214,38 @@ const Dashboard = () => {
     <>
       <Navbar currentPage="Dashboard" />
 
-      {/* Modal Pop-up for Share */}
+      {/* Modal Share */}
       {showShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
-            
+
             <div className="flex flex-row items-center">
-              {/* Textbox for the link */}
               <textarea
-                value="transcriptx/shared/123"  // Link yang akan ditampilkan
-                readOnly  // Agar tidak bisa diubah oleh pengguna
+                value={sharedLinkToShow}
+                readOnly
                 className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
-                rows={1}  // Menyesuaikan tinggi textarea
+                rows={1}
               />
-              
-              {/* Copy Link Button */}
+
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText('transcriptx/shared/123') // Link yang akan disalin
-                    .then(() => {
-                      alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
-                    })
-                    .catch(error => {
-                      alert("Failed to copy link. Please try again."); // Menangani error jika gagal
-                    });
+                  navigator.clipboard
+                    .writeText(sharedLinkToShow)
+                    .then(() => alert("Link copied to clipboard!"))
+                    .catch(() => alert("Failed to copy link. Please try again."));
                 }}
                 className="py-2 px-6 bg-white border-l-2 border-r-0 border-t-0 border-b-0 text-black rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out cursor-pointer"
               >
                 <img src={Copy} alt="copy" className="size-[14px]" />
-              </button>              
+              </button>
             </div>
-            
-            
+
             <p>____________________________________________</p>
             <button
-              onClick={closeModal}
+              onClick={() => setShowShareModal(false)}
               className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
             >
               OK
@@ -169,13 +257,12 @@ const Dashboard = () => {
       {/* Modal Delete */}
       {showDeleteModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0 text-red-600">Are you sure?</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
             <p className="break-all max-w-[300px] text-center mb-4 mt-2 text-gray-700">
-              Do you want to delete this workspace? 
-              <br/>
+              Do you want to delete this workspace?
+              <br />
               This action cannot be undone.
             </p>
             <p>____________________________________________</p>
@@ -199,7 +286,7 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="bg-white min-h-screen flex flex-col justify-start">
-        <h1 className="text-[48px] text-center font-bold text-center mb-[60px] mt-[100px]">Dashboard</h1>
+        <h1 className="text-[48px] text-center font-bold mb-[60px] mt-[100px]">Dashboard</h1>
         <div className="bg-white w-full max-w-[2000px]">
           {/* Filter Section */}
           <div className="flex flex-col justify-between mb-[50px] gap-[16px] pl-[25px]">
@@ -222,36 +309,35 @@ const Dashboard = () => {
                   className="p-2 border border-gray-300 rounded-md"
                 />
               </div>
-            </div>  
+            </div>
 
             <div className="flex flex-row gap-[16px]">
-                <div className="flex flex-col items-start">
-                  <label className="font-semibold">Type:</label>
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="All">All</option>
-                    <option value="Summarization">Summarization</option>
-                    <option value="Transcription">Transcription</option>
-                  </select>
-                </div>
-                <div className="flex flex-col items-start">
-                  <label className="font-semibold">View:</label>
-                  <select
-                    value={viewFilter}
-                    onChange={(e) => setViewFilter(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="All">All</option>
-                    <option value="Shared">Shared</option>
-                    <option value="Not Shared">Not Shared</option>
-                  </select>
-                </div>  
+              <div className="flex flex-col items-start">
+                <label className="font-semibold">Type:</label>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="All">All</option>
+                  <option value="Summarization">Summarization</option>
+                  <option value="Transcription">Transcription</option>
+                </select>
+              </div>
+              <div className="flex flex-col items-start">
+                <label className="font-semibold">View:</label>
+                <select
+                  value={viewFilter}
+                  onChange={(e) => setViewFilter(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="All">All</option>
+                  <option value="Shared">Shared</option>
+                  <option value="Not Shared">Not Shared</option>
+                </select>
+              </div>
             </div>
-              
-            
+
             <div className="flex items-center gap-[8px]">
               <button
                 onClick={handleApplyFilters}
@@ -269,40 +355,78 @@ const Dashboard = () => {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-screen max-w-screen px-[20px] text-sm text-left border-black table-fixed">
-              <thead>
-                <tr>
-                  <th className={styleTable}>No.</th>
-                  <th className={styleTable}>Date</th>
-                  <th className={styleTable}>Title</th>
-                  <th className={styleTable}>Description</th>
-                  <th className={styleTable}>Type</th>
-                  <th className={styleTable}>Shared URL</th>
-                  <th className={styleTable}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {workspaceList.map((workspace, index) => (
-                  <tr key={workspace.id}>
-                    <td className={styleTable}>{index + 1}</td>
-                    <td className={styleTable}>{workspace.date}</td>
-                    <td className={styleTable}>{workspace.title}</td>
-                    <td className={styleTable}>{workspace.description}</td>
-                    <td className={styleTable}>{workspace.type}</td>
-                    <td className={styleTable}>{workspace.sharedUrl || "-"}</td>
-                    <td className="border border-black px-[6px] py-[5px] flex justify-center space-x-[4px]">
-                      <button onClick={() => handleViewWorkspace(workspace.id)} className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"><FaEye /></button>
-                      <button onClick={() => handleEditWorkspace(workspace.id)} className="text-black bg-kuning border-none rounded-[4px] cursor-pointer py-[4px]"><FaEdit /></button>
-                      <button onClick={handleShare} className="text-black bg-minty border-none rounded-[4px] cursor-pointer py-[4px]"><FaLink /></button>
-                      <button onClick={() => handleExport(workspace.id)} className="text-black bg-biru_muda border-none rounded-[4px] cursor-pointer py-[4px]"><FaDownload /></button>
-                      <button onClick={() => handleDelete(workspace.id)} className="text-black bg-dark_red border-none rounded-[4px] cursor-pointer py-[4px]"><FaTrash /></button>
-                    </td>
+          {loading ? (
+            <p className="text-center">Loading workspaces...</p>
+          ) : error ? (
+            <p className="text-center text-red-600">{error}</p>
+          ) : workspaceList.length === 0 ? (
+            <p className="text-center">No workspaces found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-screen max-w-screen px-[20px] text-sm text-left border-black table-fixed">
+                <thead>
+                  <tr>
+                    <th className={styleTable}>No.</th>
+                    <th className={styleTable}>Date</th>
+                    <th className={styleTable}>Title</th>
+                    <th className={styleTable}>Description</th>
+                    <th className={styleTable}>Type</th>
+                    <th className={styleTable}>Shared URL</th>
+                    <th className={styleTable}>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {workspaceList.map((w, index) => (
+                    <tr key={w.id}>
+                      <td className={styleTable}>{index + 1}</td>
+                      <td className={styleTable}>{w.date}</td>
+                      <td className={styleTable}>{w.title}</td>
+                      <td className={styleTable}>{w.description}</td>
+                      <td className={styleTable}>{w.type}</td>
+                      <td className={styleTable}>{w.sharedUrl || "-"}</td>
+                      <td className="border border-black px-[6px] py-[5px] flex justify-center space-x-[4px]">
+                        <button
+                          onClick={() => handleViewWorkspace(w.id)}
+                          className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"
+                          title="View"
+                        >
+                          <FaEye />
+                        </button>
+                        <button
+                          onClick={() => handleEditWorkspace(w.id)}
+                          className="text-black bg-kuning border-none rounded-[4px] cursor-pointer py-[4px]"
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={() => handleShare(w.sharedUrl !== "-" ? w.sharedUrl : "", w.id)}
+                          className="text-black bg-minty border-none rounded-[4px] cursor-pointer py-[4px]"
+                          title="Share"
+                        >
+                          <FaLink />
+                        </button>
+                        <button
+                          onClick={() => handleExport(w.id)}
+                          className="text-black bg-biru_muda border-none rounded-[4px] cursor-pointer py-[4px]"
+                          title="Export"
+                        >
+                          <FaDownload />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(w.id)}
+                          className="text-black bg-dark_red border-none rounded-[4px] cursor-pointer py-[4px]"
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </>

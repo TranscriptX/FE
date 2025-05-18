@@ -1,60 +1,141 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import API_PATH from "../../api/API_PATH";
+import { getUserIdFromToken } from "../../utils/Helper";
 
 const EditWorkspace = () => {
   const navigate = useNavigate();
-  const [title, setTitle] = useState("Lorem Ipsum");
-  const [description, setDescription] = useState("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-  const [sharedLink, setSharedLink] = useState("transcriptx.com/shared/123");
+  const location = useLocation();
+  const { id } = useParams<{ id: string }>();
 
-  // Modal visibility states
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [shared, setShared] = useState(false);
+
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showStopShareModal, setShowStopShareModal] = useState(false);
 
-  const handleCancel = () => {
-    navigate("/Dashboard");
-  };
+  const token = localStorage.getItem("token");
+  const userID = token ? getUserIdFromToken(token) : null;
 
-  const handleSubmit = () => {
-    setShowSubmitModal(true);
-  };
+  // Load workspace detail if location.state tidak tersedia
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (location.state) {
+        const ws = location.state as any;
+        setTitle(ws.title || "");
+        setDescription(ws.description || "");
+        setShared(Boolean(ws.sharedLink));
+      } else if (id && token && userID) {
+        try {
+          const res = await fetch(`${API_PATH}/api/workspaces/detail`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ workspaceID: id, userID }),
+          });
+          if (!res.ok) throw new Error("Failed to fetch workspace detail");
+          const data = await res.json();
+          if (data.statusCode === 200) {
+            setTitle(data.payload.title || "");
+            setDescription(data.payload.description || "");
+            setShared(Boolean(data.payload.sharedLink));
+          } else {
+            throw new Error(data.message || "Failed to fetch workspace detail");
+          }
+        } catch (err) {
+          alert(err);
+        }
+      }
+    };
+    fetchDetail();
+  }, [location.state, id, token, userID]);
 
-  const handleStopShare = () => {
-    setShowStopShareModal(true);
-  };
-
-  // Modal close
   const closeModal = () => {
     setShowSubmitModal(false);
     setShowStopShareModal(false);
   };
 
-  // Confirm actions
-  const confirmSubmit = () => {
-    // Logic for submit
-    console.log("Workspace submitted");
-    setShowSubmitModal(false);
-    navigate("/Dashboard"); // Navigate to Dashboard or other page after submit
+  // Edit workspace API
+  const editWorkspace = async () => {
+    if (!token || !userID || !id) {
+      alert("Missing authentication or workspace ID");
+      return false;
+    }
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/edit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          workspaceID: id,
+          userID,
+          title,
+          description,
+          shared,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update workspace");
+      const data = await res.json();
+      if (data.statusCode !== 200) throw new Error(data.message || "Failed to update workspace");
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
-  const confirmStopShare = () => {
-    // Logic for stop sharing
-    console.log("Workspace sharing stopped");
-    setShowStopShareModal(false);
-    navigate("/Dashboard"); // Navigate after stopping the share
+  // Stop share API call (set shared = false)
+  const stopSharingWorkspace = async () => {
+    setShared(false);
+    return editWorkspace();
   };
 
-  const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
+  const confirmSubmit = async () => {
+    const success = await editWorkspace();
+    if (success) {
+      alert("Workspace updated successfully.");
+      setShowSubmitModal(false);
+      navigate("/Dashboard");
+    } else {
+      alert("Failed to update workspace. Please try again.");
+    }
+  };
+
+  const confirmStopShare = async () => {
+    const success = await stopSharingWorkspace();
+    if (success) {
+      alert("Workspace sharing stopped.");
+      setShowStopShareModal(false);
+      navigate("/Dashboard");
+    } else {
+      alert("Failed to stop sharing workspace. Please try again.");
+    }
+  };
+
+  const handleCancel = () => {
+    navigate("/Dashboard");
+  };
+
+  const handleSubmit = () => setShowSubmitModal(true);
+  const handleStopShare = () => setShowStopShareModal(true);
+
+  const inputStyle =
+    "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
   return (
     <>
       <Navbar currentPage="Dashboard" />
 
-      {/* Modal Pop-up for Submit Confirmation */}
+      {/* Submit Modal */}
       {showSubmitModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0 max-w-[300px]">Are you sure you want to submit?</h2>
             <p className="text-center mt-4">Ensure all updates are correct before finalizing.</p>
@@ -77,10 +158,10 @@ const EditWorkspace = () => {
         </div>
       )}
 
-      {/* Modal Pop-up for Stop Share Confirmation */}
+      {/* Stop Share Modal */}
       {showStopShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl max-w-[400px] font-bold mb-0">Are you sure you want to stop sharing?</h2>
             <p>____________________________________________</p>
@@ -102,37 +183,31 @@ const EditWorkspace = () => {
         </div>
       )}
 
+      {/* Main Form */}
       <div className="bg-white min-h-screen flex flex-col justify-start items-center">
         <h1 className="text-3xl font-bold text-center mt-[100px]">EDIT WORKSPACE</h1>
         <div className="bg-white p-[60px] w-full max-w-[1000px]">
-        
           <div className="grid grid-cols-2 gap-[24px] mb-6">
             <div>
-              <div className="mb-4">
-                <label className="block text-black font-[600]">Title</label>
-                <input
-                  className={inputStyle}
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
+              <label className="block text-black font-[600]">Title</label>
+              <input
+                className={inputStyle}
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
             </div>
-
             <div>
-              <div className="mb-4">
-                <label className="block text-black font-[600]">Shared Link</label>
-                <input
-                  className={inputStyle}
-                  type="text"
-                  value={sharedLink}
-                  onChange={(e) => setSharedLink(e.target.value)}
-                />
-              </div>
+              <label className="block text-black font-[600]">Shared</label>
+              <input
+                className={inputStyle}
+                type="checkbox"
+                checked={shared}
+                onChange={(e) => setShared(e.target.checked)}
+              />
             </div>
           </div>
-
-          <div className="mt-[16px]">
+          <div>
             <label className="block text-black font-[600]">Description</label>
             <textarea
               className="font-sans w-full px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none"
@@ -141,7 +216,6 @@ const EditWorkspace = () => {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-
           <div className="flex flex-col items-end space-y-[8px] mt-[16px]">
             <div className="flex space-x-[8px]">
               <button
@@ -166,8 +240,6 @@ const EditWorkspace = () => {
           </div>
         </div>
       </div>
-
-      
     </>
   );
 };
