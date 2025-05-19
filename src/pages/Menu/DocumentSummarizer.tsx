@@ -16,8 +16,8 @@ const DocumentSummarizer = () => {
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [summaryResult, setSummaryResult] = useState("");
   const [isSummarized, setIsSummarized] = useState(false);
-  
-  const [workspaceID, setWorkspaceID] = useState<string | null>(null); // Dynamically set workspaceID
+
+  const [workspaceID, setWorkspaceID] = useState<string | null>(null); // To store dynamic workspaceID
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharedLink, setSharedLink] = useState(""); // To store the generated link
 
@@ -29,6 +29,7 @@ const DocumentSummarizer = () => {
       setFile(e.target.files[0]);
       setIsSummarized(false);
       setSummaryResult("");
+      setWorkspaceID(null); // reset workspaceID on new file upload
     }
   };
 
@@ -65,18 +66,18 @@ const DocumentSummarizer = () => {
         fileBase64 = await convertFileToBase64(file);
       }
 
-      // Determine mode: document upload or workspace summarization
+      // Prepare payload: only one of file or workspaceID should be filled
       const payload = {
         userID,
         name: workspaceTitle || null,
         description: workspaceDescription || null,
-        file: fileBase64,                       // Only used for uploaded files
-        workspaceID: workspaceID || null,       // Only used for existing transcription
+        file: file ? fileBase64 : null,
+        workspaceID: file ? null : workspaceID,
       };
 
-      // Enforce API contract: one of file or workspaceID must be null
-      if (!file && !workspaceID) {
-        alert("Please upload a file or choose an existing transcription to summarize.");
+      // Validate presence of file or workspaceID
+      if (!payload.file && !payload.workspaceID) {
+        alert("Please upload a file or select an existing transcription to summarize.");
         return;
       }
 
@@ -91,7 +92,9 @@ const DocumentSummarizer = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("API response payload:", data.payload);
         setSummaryResult(data.payload.result);
+        setWorkspaceID(data.payload.workspaceID); // Save workspaceID from response
         setIsSummarized(true);
       } else {
         const errorData = await response.json();
@@ -105,31 +108,44 @@ const DocumentSummarizer = () => {
 
   // Handle Share - Making API request to share workspace
   const handleShare = async () => {
-    if (workspaceID) { // Ensure workspaceID is valid
-      const payload = {
-        workspaceID: workspaceID, // Using dynamic workspaceID
-        isGrantAccess: true, // Set to false to remove share access
-        
-      };
+    if (!workspaceID) {
+      alert("Workspace ID is missing. Please summarize first.");
+      return;
+    }
 
-      try {
-        const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("User not authenticated. Please login.");
+      return;
+    }
 
-        if (response.ok) {
-          const data = await response.json();
-          setSharedLink(data.payload.link);  // Set the link in state
-          setShowShareModal(true);
-        } else {
-          alert("Failed to share workspace. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while sharing the workspace.");
+    const payload = {
+      workspaceID,
+      isGrantAccess: true,
+    };
+
+    try {
+      const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSharedLink(data.payload.link);
+        setShowShareModal(true);
+      } else {
+        const errorText = await response.text();
+        console.error("Share API error response:", errorText);
+        alert(`Failed to share workspace: ${errorText}`);
       }
+    } catch (error) {
+      console.error("Error sharing workspace:", error);
+      alert("An error occurred while sharing the workspace.");
     }
   };
 
@@ -163,14 +179,14 @@ const DocumentSummarizer = () => {
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
             <div className="flex flex-row items-center">
               <textarea
-                value={sharedLink} // The shared link
+                value={sharedLink}
                 readOnly
                 className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
                 rows={1}
               />
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(sharedLink) // Copy the link
+                  navigator.clipboard.writeText(sharedLink)
                     .then(() => alert("Link copied to clipboard!"))
                     .catch(() => alert("Failed to copy link. Please try again."));
                 }}

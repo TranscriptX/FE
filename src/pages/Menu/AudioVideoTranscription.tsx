@@ -31,6 +31,7 @@ const AudioVideoTranscription = () => {
       setIsSummarized(false);
       setTranscriptionResult("");
       setSummarizedText("");
+      setWorkspaceID(null); // Reset workspaceID on new file upload
     }
   };
 
@@ -72,16 +73,18 @@ const AudioVideoTranscription = () => {
         const response = await fetch(`${API_PATH}/api/tools/transcript`, {
           method: "POST",
           headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
           const data = await response.json();
           setTranscriptionResult(data.payload.result);
+          setWorkspaceID(data.payload.workspaceID || null);
           setIsTranscribed(true);
+          setFile(null); // RESET FILE agar summarize pakai workspaceID
         } else {
           alert("Failed to transcribe the audio/video. Please try again.");
         }
@@ -94,91 +97,99 @@ const AudioVideoTranscription = () => {
 
   // Handle Summarize
   const handleSummarize = async () => {
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    alert("Authorization token not found. Please log in.");
-    return;
-  }
-
-  const userID = getUserIdFromToken(token);
-
-  if (!userID) {
-    alert("Invalid token. Please log in again.");
-    return;
-  }
-
-  try {
-    let fileBase64: string | null = null;
-
-    if (transcriptionResult) {
-      // Convert transcription text into a Blob (like a .txt file)
-      const blob = new Blob([transcriptionResult], { type: "text/plain" });
-
-      // Convert blob to Base64
-      fileBase64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    }
-
-    // Validate input
-    if (!fileBase64 && !workspaceID) {
-      alert("No transcription or workspaceID available for summarization.");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Authorization token not found. Please log in.");
       return;
     }
 
-    const payload = {
-      userID,
-      name: workspaceTitle || null,
-      description: workspaceDescription || null,
-      file: fileBase64,
-      workspaceID: null, // because we're summarizing new transcription, not existing workspace
-    };
-
-    const response = await fetch(`${API_PATH}/api/tools/summarize`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setSummarizedText(data.payload.result);
-      setIsSummarized(true);
-    } else {
-      const errorData = await response.json();
-      alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+    const userID = getUserIdFromToken(token);
+    if (!userID) {
+      alert("Invalid token. Please log in again.");
+      return;
     }
-  } catch (error) {
-    console.error("Error during summarization:", error);
-    alert("An error occurred while summarizing.");
-  }
-};
+
+    try {
+      let fileBase64: string | null = null;
+
+      // Kirim file hanya kalau ada file dan belum ada workspaceID
+      if (file && !workspaceID) {
+        fileBase64 = await convertFileToBase64(file);
+      }
+
+      if (!fileBase64 && !workspaceID) {
+        alert("Please upload a file or use an existing transcription to summarize.");
+        return;
+      }
+
+      const payload = workspaceID
+        ? {
+            userID,
+            name: workspaceTitle || null,
+            description: workspaceDescription || null,
+            file: null,
+            workspaceID: workspaceID,
+          }
+        : {
+            userID,
+            name: workspaceTitle || null,
+            description: workspaceDescription || null,
+            file: fileBase64,
+            workspaceID: null,
+          };
+
+      console.log("Summarize payload:", payload); // Debug
+
+      const response = await fetch(`${API_PATH}/api/tools/summarize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSummarizedText(data.payload.result);
+        setIsSummarized(true);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error during summarization:", error);
+      alert("An error occurred while summarizing.");
+    }
+  };
 
   // Handle Share - Making API request to share workspace
   const handleShare = async () => {
-    if (workspaceID) { // Ensure workspaceID is valid
+    if (workspaceID) {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("User not authenticated.");
+        return;
+      }
+
       const payload = {
-        workspaceID: workspaceID, // Using dynamic workspaceID
-        isGrantAccess: true, // Set to false to remove share access
+        workspaceID: workspaceID,
+        isGrantAccess: true,
       };
 
       try {
         const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
           const data = await response.json();
-          setSharedLink(data.payload.link);  // Set the link in state
+          setSharedLink(data.payload.link);
           setShowShareModal(true);
         } else {
           alert("Failed to share workspace. Please try again.");
@@ -221,14 +232,14 @@ const AudioVideoTranscription = () => {
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
             <div className="flex flex-row items-center">
               <textarea
-                value={sharedLink} // The shared link
+                value={sharedLink}
                 readOnly
                 className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
                 rows={1}
               />
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(sharedLink) // Copy the link
+                  navigator.clipboard.writeText(sharedLink)
                     .then(() => alert("Link copied to clipboard!"))
                     .catch(() => alert("Failed to copy link. Please try again."));
                 }}
