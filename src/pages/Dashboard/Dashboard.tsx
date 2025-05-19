@@ -86,6 +86,8 @@ const Dashboard = () => {
         originalPayload: item,
       }));
 
+      console.log("Workspaces to render in table:", list);
+
       setWorkspaceList(list);
       setOriginalList(list);
     } catch (err: any) {
@@ -102,7 +104,7 @@ const Dashboard = () => {
 
   // Delete workspace API (multiple IDs possible)
   const deleteWorkspace = async (workspaceIDs: string[]) => {
-    if (!token || !userID) return false;
+  if (!token || !userID) return false;
     try {
       const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
         method: "POST",
@@ -112,7 +114,9 @@ const Dashboard = () => {
         },
         body: JSON.stringify({ workspaceID: workspaceIDs, userID }),
       });
-      if (res.status !== 204) throw new Error("Failed to delete workspace");
+
+      // Accept any 2xx success response
+      if (!res.ok) throw new Error("Failed to delete workspace");
       return true;
     } catch (err) {
       console.error(err);
@@ -131,6 +135,7 @@ const Dashboard = () => {
       setShowDeleteModal(false);
     } else {
       alert("Failed to delete workspace. Please try again.");
+      return;
     }
   };
 

@@ -24,28 +24,29 @@ const ViewWorkspace = () => {
 
   // Fetch data jika belum ada dan ada id + token + userID
   useEffect(() => {
-    if (!workspaceData && id && token && userID) {
-      setLoading(true);
-      fetch(`${API_PATH}/api/workspaces/detail`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workspaceID: id, userID }),
+    if (!id || !token || !userID) return;
+
+    setLoading(true);
+    fetch(`${API_PATH}/api/workspaces/detail`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ workspaceID: id, userID }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Workspace not found");
+        return res.json();
       })
-        .then((res) => {
-          if (!res.ok) throw new Error("Workspace not found");
-          return res.json();
-        })
-        .then((data) => {
-          setWorkspaceData(data.payload);
-          setError(null);
-        })
-        .catch((err) => setError(err.message || "Failed to load workspace"))
-        .finally(() => setLoading(false));
-    }
-  }, [id, workspaceData, token, userID]);
+      .then((data) => {
+        console.log("Fetched detail:", data.payload);
+        setWorkspaceData(data.payload);
+        setError(null);
+      })
+      .catch((err) => setError(err.message || "Failed to load workspace"))
+      .finally(() => setLoading(false));
+  }, [id, token, userID]);
 
   // Format tanggal tampil
   const formattedDate =
@@ -126,16 +127,6 @@ const ViewWorkspace = () => {
     );
   }
 
-  // Destruct data workspace untuk UI
-  const {
-    title = "Untitled",
-    author = "Unknown",
-    originalFileName = "-",
-    sharedLink = "",
-    description = "-",
-    transcription = "-",
-  } = workspaceData;
-
   return (
     <>
       <Navbar currentPage="Dashboard" />
@@ -149,7 +140,7 @@ const ViewWorkspace = () => {
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
             <div className="flex flex-row items-center">
               <textarea
-                value={sharedLink}
+                value={workspaceData?.sharedLink || "-"}
                 readOnly
                 className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
                 rows={1}
@@ -203,20 +194,20 @@ const ViewWorkspace = () => {
       )}
 
       <div className="bg-white min-h-screen flex flex-col justify-start items-center">
-        <h1 className="text-3xl font-bold text-center mt-[100px]">{title}</h1>
+        <h1 className="text-3xl font-bold text-center mt-[100px]">{workspaceData?.title || "Untitled"}</h1>
         <div className="bg-white p-[60px] w-full max-w-[1000px]">
           <div className="grid grid-cols-2 gap-[36px] mb-6">
             <div>
               <div className={formStyle}>
                 <label className={textStyle}>Author</label>
-                <input className={inputStyle} type="text" defaultValue={author} readOnly />
+                <input className={inputStyle} type="text" value={workspaceData?.author || "Unknown"} readOnly />
               </div>
               <div className={formStyle}>
                 <label className={textStyle}>Created Date</label>
                 <input
                   className={inputStyle}
                   type="text"
-                  defaultValue={formattedDate}
+                  value={formattedDate}
                   readOnly
                 />
               </div>
@@ -225,7 +216,7 @@ const ViewWorkspace = () => {
                 <input
                   className={inputStyle}
                   type="text"
-                  defaultValue={originalFileName}
+                  value={workspaceData?.fileName || "-"}
                   readOnly
                 />
               </div>
@@ -237,7 +228,7 @@ const ViewWorkspace = () => {
                 <input
                   className={inputStyle}
                   type="text"
-                  defaultValue={sharedLink}
+                  value={workspaceData?.sharedLink || "-"}
                   readOnly
                 />
               </div>
@@ -249,20 +240,34 @@ const ViewWorkspace = () => {
             <textarea
               className={inputStyle}
               rows={4}
-              defaultValue={description}
+              value={workspaceData?.description || "-"}
               readOnly
             />
           </div>
 
-          <div className={formStyle}>
-            <label className={textStyle}>Result</label>
-            <textarea
-              className={inputStyle}
-              rows={4}
-              defaultValue={transcription}
-              readOnly
-            />
-          </div>
+          {workspaceData?.transcription && (
+            <div className={formStyle}>
+              <label className={textStyle}>Transcription Result</label>
+              <textarea
+                className={inputStyle}
+                rows={4}
+                value={workspaceData.transcription}
+                readOnly
+              />
+            </div>
+          )}
+
+          {workspaceData?.summarization && (
+            <div className={formStyle}>
+              <label className={textStyle}>Summarization Result</label>
+              <textarea
+                className={inputStyle}
+                rows={4}
+                value={workspaceData.summarization}
+                readOnly
+              />
+            </div>
+          )}
 
           <div className="flex justify-end space-x-[12px]">
             <button
