@@ -105,7 +105,7 @@ const ForgotPage = () => {
                         <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
                             <h2 className="text-xl font-bold mb-0">Success!</h2>
                             <img src={checkSign} alt="check" className="size-[96px]" />
-                            <p className="break-all max-w-[300px] text-center mb-auto flex flex-col items-center">Password reset link sent to <b className="text-center mb-auto">{email}</b></p>
+                            <p className="break-all max-w-[300px] text-center mb-auto flex flex-col items-center">Password reset token has been sent to <b className="text-center mb-auto">{email}</b></p>
                             <p>____________________________________________</p>
                             <button
                                 onClick={() => {

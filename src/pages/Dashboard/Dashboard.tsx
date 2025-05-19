@@ -30,7 +30,6 @@ const Dashboard = () => {
 
   const fetchWorkspaceData = async () => {
     if (!token || !userID) {
-      setError("User not authenticated");
       setLoading(false);
       return;
     }
@@ -63,8 +62,11 @@ const Dashboard = () => {
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Failed to fetch: ${res.status} ${text}`);
+        // const text = await res.text();
+        // throw new Error(`Failed to fetch: ${res.status} ${text}`);
+        alert("User not authenticated. Please login.");
+        navigate("/login");
+        return;
       }
 
       const data = await res.json();
@@ -72,14 +74,16 @@ const Dashboard = () => {
       if (data.statusCode !== 200) throw new Error(data.message || "Failed to fetch");
 
       // Map response to format yang dipakai UI
-      const list = data.payload.map((item: any) => ({
+      const list = data.payload
+      .sort((a: any, b: any) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
+      .map((item: any) => ({
         id: item.workspaceID,
         date: item.createdDate.split("T")[0],
         title: item.title,
         description: item.description,
         type: item.type,
         sharedUrl: item.link || "-",
-        originalPayload: item, // simpan data asli supaya bisa dikirim ke state
+        originalPayload: item,
       }));
 
       setWorkspaceList(list);

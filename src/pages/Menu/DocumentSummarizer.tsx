@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Copy from "../../assets/copy.svg";
 import API_PATH from "../../api/API_PATH";
 import { getUserIdFromToken } from "../../utils/Helper";
+import Loading from "../../assets/loading.svg";
 
 const WORKSPACE_SHARE_ENDPOINT = `${API_PATH}/api/workspaces/share`;
 
@@ -16,6 +17,7 @@ const DocumentSummarizer = () => {
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [summaryResult, setSummaryResult] = useState("");
   const [isSummarized, setIsSummarized] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [workspaceID, setWorkspaceID] = useState<string | null>(null); // To store dynamic workspaceID
   const [showShareModal, setShowShareModal] = useState(false);
@@ -49,6 +51,7 @@ const DocumentSummarizer = () => {
 
     if (!token) {
       alert("Authorization token not found. Please log in.");
+      navigate("/login");
       return;
     }
 
@@ -56,8 +59,11 @@ const DocumentSummarizer = () => {
 
     if (!userID) {
       alert("Invalid token. Please log in again.");
+      navigate("/login");
       return;
     }
+
+    setIsLoading(true);
 
     try {
       let fileBase64: string | null = null;
@@ -78,6 +84,7 @@ const DocumentSummarizer = () => {
       // Validate presence of file or workspaceID
       if (!payload.file && !payload.workspaceID) {
         alert("Please upload a file or select an existing transcription to summarize.");
+        setIsLoading(false);
         return;
       }
 
@@ -99,10 +106,15 @@ const DocumentSummarizer = () => {
       } else {
         const errorData = await response.json();
         alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+        if (errorData.message === "Invalid or expired token. Please login."){
+          navigate("/login");
+        }
       }
     } catch (error) {
       console.error("Error during summarization:", error);
       alert("An error occurred while summarizing.");
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -116,6 +128,7 @@ const DocumentSummarizer = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("User not authenticated. Please login.");
+      navigate("/login");
       return;
     }
 
@@ -206,6 +219,19 @@ const DocumentSummarizer = () => {
         </div>
       )}
 
+      {isLoading && (
+        <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
+          {/* Ganti ini dengan komponen/icon loading kamu */}
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
+            <p className="text-[24px] font-[600] pb-[16px]">Summarizing Document...</p>
+            <div className="w-[48px] h-[48px] mx-auto">
+              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
+              <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white min-h-screen flex justify-center items-center">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
           <h1 className="text-3xl font-bold text-center mb-1">Document Summarizer</h1>
@@ -215,6 +241,7 @@ const DocumentSummarizer = () => {
             <label className="text-black font-[600] mb-[5px]">Click here to Upload Document</label>
             <input
               type="file"
+              disabled={isLoading}
               onChange={handleFileChange}
               accept=".txt,.doc,.docx,.pdf"
               className="w-full text-darker_grey text-[18px] bg-color_secondary border-2 border-dark_grey rounded-[5px] p-[20px] cursor-pointer shadow-[0,1px,4px,rgba(0,0,0,0.25)] hover:border-dark_grey hover:ring-2 hover:ring-dark_grey focus:ring-2 focus:ring-dark_grey"
@@ -229,6 +256,7 @@ const DocumentSummarizer = () => {
               <label className="block text-black font-[600] mb-2">Workspace Title</label>
               <input
                 type="text"
+                disabled={isSummarized || isLoading}
                 placeholder="Enter workspace title"
                 value={workspaceTitle}
                 onChange={(e) => setWorkspaceTitle(e.target.value)}
@@ -240,6 +268,7 @@ const DocumentSummarizer = () => {
               <label className="block text-black font-[600] mb-2">Workspace Description</label>
               <textarea
                 placeholder="Enter workspace description"
+                disabled={isSummarized || isLoading}
                 value={workspaceDescription}
                 onChange={(e) => setWorkspaceDescription(e.target.value)}
                 className={inputStyle}
@@ -252,7 +281,7 @@ const DocumentSummarizer = () => {
             <div className="flex justify-end mb-6">
               <button
                 onClick={handleSummarize}
-                disabled={!file}
+                disabled={isLoading || !file}
                 className={`py-[8px] px-[24px] mt-[10px] ${!file ? 'bg-color_secondary' : 'bg-biru_muda text-white hover:ring-1 hover:ring-biru_muda cursor-pointer border-biru_muda'} rounded-[5px] shadow-[0,1px,5px,rgba(50,173,230,0.25)] transition-all duration-400 ease-in-out`}
               >
                 Summarize
@@ -260,7 +289,7 @@ const DocumentSummarizer = () => {
             </div>
           )}
 
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-[16px]">
             {isSummarized && (
               <div className="mt-4">
                 <label className="block font-[600] mt-[10px]">Summary Result:</label>
@@ -273,12 +302,14 @@ const DocumentSummarizer = () => {
                 <div className="mt-4 flex space-x-[12px] justify-end">
                   <button
                     onClick={handleShare}
+                    disabled={isLoading}
                     className="py-[8px] px-[24px] mt-[10px] bg-ijo text-white hover:ring-1 hover:ring-ijo cursor-pointer border-ijo rounded-[5px] shadow-[0,1px,5px,rgba(52,199,89,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Share
                   </button>
                   <button
                     onClick={handleExport}
+                    disabled={isLoading}
                     className="py-[8px] px-[24px] mt-[10px] bg-minty text-white hover:ring-1 hover:ring-minty cursor-pointer border-minty rounded-[5px] shadow-[0,1px,2px,rgba(0,199,190,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Export
