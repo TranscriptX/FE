@@ -53,6 +53,7 @@ const DocumentSummarizer = () => {
     }
 
     const userID = getUserIdFromToken(token);
+
     if (!userID) {
       alert("Invalid token. Please log in again.");
       return;
