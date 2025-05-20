@@ -20,6 +20,7 @@ const Dashboard = () => {
 
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
   const [sharedLinkToShow, setSharedLinkToShow] = useState<string>("");
 
@@ -100,7 +101,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchWorkspaceData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startDate, endDate, typeFilter, viewFilter]);
 
   // Delete workspace API (multiple IDs possible)
   const deleteWorkspace = async (workspaceIDs: string[]) => {
@@ -133,6 +134,7 @@ const Dashboard = () => {
       setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
+      setShowDeleteSuccess(false);
     } else {
       alert("Failed to delete workspace. Please try again.");
       return;
@@ -217,7 +219,9 @@ const Dashboard = () => {
     fetchWorkspaceData();
   };
 
-  const styleTable = "border border-black px-[6px] py-[3px]";
+  const styleTable = "border-l border-t border-black px-[6px] py-[3px] align-middle";
+
+  // border-t border-l border-black px-[6px] py-[3px]
 
   return (
     <>
@@ -263,6 +267,31 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Pop up Delete Success */}
+      {showDeleteSuccess && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0 text-red-600">Success</h2>
+            <p className="break-all max-w-[320px] text-center mb-4 mt-2 text-gray-700">
+              Your workspace was successfully deleted.
+            </p>
+            <p>____________________________________________</p>
+            <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
+              <button
+                onClick={() => {
+                  setShowDeleteSuccess(false);
+                  confirmDelete();
+                }}
+                className="bg-ijo text-white font-bold px-[12px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover cursor-pointer"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Delete */}
       {showDeleteModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
@@ -277,13 +306,18 @@ const Dashboard = () => {
             <p>____________________________________________</p>
             <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
               <button
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                }}
                 className="bg-grey text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
+                onClick={() => {
+                  setShowDeleteSuccess(true);
+                  setShowDeleteModal(false);
+                }}
                 className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red cursor-pointer"
               >
                 Delete
@@ -371,29 +405,29 @@ const Dashboard = () => {
           ) : workspaceList.length === 0 ? (
             <p className="text-center">No workspaces found.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-screen max-w-screen px-[20px] text-sm text-left border-black table-fixed">
-                <thead>
-                  <tr>
+            <div className="overflow-hidden">
+              <table className="min-w-full max-w-full px-[20px] text-sm text-left table-auto">
+                <thead className="bg-grey">
+                  <tr className={styleTable}>
                     <th className={styleTable}>No.</th>
                     <th className={styleTable}>Date</th>
                     <th className={styleTable}>Title</th>
                     <th className={styleTable}>Description</th>
                     <th className={styleTable}>Type</th>
                     <th className={styleTable}>Shared URL</th>
-                    <th className={styleTable}>Action</th>
+                    <th className="border-t border-l border-r border-black px-[6px] py-[3px]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {workspaceList.map((w, index) => (
-                    <tr key={w.id}>
+                    <tr key={w.id} className={index % 2 === 0 ? "bg-white" : "bg-color_secondary" }>
                       <td className={styleTable}>{index + 1}</td>
                       <td className={styleTable}>{w.date}</td>
                       <td className={styleTable}>{w.title}</td>
                       <td className={styleTable}>{w.description}</td>
                       <td className={styleTable}>{w.type}</td>
                       <td className={styleTable}>{w.sharedLink || "-"}</td>
-                      <td className="border border-black px-[6px] py-[5px] flex justify-center space-x-[4px]">
+                      <td className="border-l border-r border-t border-black px-[6px] py-[5px] flex flex-row h-[90px] justify-center items-center space-x-[4px]">
                         <button
                           onClick={() => handleViewWorkspace(w.id)}
                           className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"
