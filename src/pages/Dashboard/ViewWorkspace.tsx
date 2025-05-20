@@ -17,6 +17,10 @@ const ViewWorkspace = () => {
   const [error, setError] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
+  const [workspaceList, setWorkspaceList] = useState<any[]>([]);
+  const [originalList, setOriginalList] = useState<any[]>([]);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
   // Ambil token dan userID dari localStorage/helper
   const token = localStorage.getItem("token");
@@ -55,7 +59,6 @@ const ViewWorkspace = () => {
       : "-";
 
   // Modal handlers
-  const handleDelete = () => setShowDeleteModal(true);
   const handleShare = () => setShowShareModal(true);
   const closeModal = () => {
     setShowShareModal(false);
@@ -63,18 +66,54 @@ const ViewWorkspace = () => {
   };
 
   // Edit workspace handler
-  const handleEditWorkspace = () => {
-    if (workspaceData?.id) {
-      navigate(`/edit-workspace/${workspaceData.id}`, { state: workspaceData });
-    }
+  const handleEditWorkspace = (workspaceId: string | undefined) => {
+    navigate(`/edit-workspace/${workspaceId}`);
   };
 
-  // Confirm delete handler (placeholder logic)
-  const confirmDelete = () => {
-    // TODO: implement API delete request here
-    console.log(`Workspace with ID ${workspaceData?.id} deleted`);
-    setShowDeleteModal(false);
-    navigate("/dashboard");
+  const deleteWorkspace = async (id: string[]) => {
+    if (!token || !userID) return false;
+      try {
+        const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ workspaceID: id, userID }),
+        });
+  
+        // Accept any 2xx success response
+        if (!res.ok) throw new Error("Failed to delete workspace");
+        return true;
+      } catch (err) {
+        console.error(err);
+        return false;
+      }
+    };
+
+  const handleDelete = (workspaceId: string | undefined) => {
+    if (!workspaceId) return;
+    console.log("Clicked delete on workspace ID:", workspaceId);
+    setWorkspaceToDelete(workspaceId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    console.log("Confirming delete for ID:", workspaceToDelete);
+    if (!workspaceToDelete) return;
+    const success = await deleteWorkspace([workspaceToDelete!]);
+    if (success) {
+      const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
+      setWorkspaceList(updated);
+      setOriginalList(updated);
+      setWorkspaceToDelete(null);
+      setShowDeleteModal(false);
+      setShowDeleteSuccess(false);
+      navigate("/dashboard");
+    } else {
+      alert("Failed to delete workspace. Please try again.");
+      return;
+    }
   };
 
   // Copy link handler for share modal
@@ -163,28 +202,59 @@ const ViewWorkspace = () => {
         </div>
       )}
 
-      {/* Delete Modal */}
+      {/* Pop up Delete Success */}
+      {showDeleteSuccess && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0 text-red-600">Success</h2>
+            <p className="break-all max-w-[320px] text-center mb-4 mt-2 text-gray-700">
+              Your workspace was successfully deleted.
+            </p>
+            <p>____________________________________________</p>
+            <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
+              <button
+                onClick={() => {
+                  setShowDeleteSuccess(false);
+                  navigate("/dashboard");
+                  confirmDelete();
+                }}
+                className="bg-ijo text-white font-bold px-[12px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover cursor-pointer"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Delete */}
       {showDeleteModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary"></div>
-          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0 text-red-600">Are you sure?</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
             <p className="break-all max-w-[300px] text-center mb-4 mt-2 text-gray-700">
-              Do you want to delete this workspace? <br />
+              Do you want to delete this workspace?
+              <br />
               This action cannot be undone.
             </p>
             <p>____________________________________________</p>
-            <div className="flex justify-end space-x-[8px] mb-[8px]">
+            <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
               <button
-                onClick={() => setShowDeleteModal(false)}
-                className="bg-color_secondary text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                }}
+                className="bg-grey text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
-                className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
+                onClick={() => {
+                  setShowDeleteSuccess(true);
+                  setShowDeleteModal(false);
+                }}
+                className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red cursor-pointer"
               >
                 Delete
               </button>
@@ -284,13 +354,13 @@ const ViewWorkspace = () => {
             </button>
             <button
               className="bg-kuning text-white font-bold px-[24px] py-[4px] rounded-[4px] border-kuning hover:bg-kuning_dark hover:border-kuning_dark cursor-pointer"
-              onClick={handleEditWorkspace}
+              onClick={() => handleEditWorkspace(id)}
             >
               Edit
             </button>
             <button
               className="bg-[red] text-white font-bold px-[24px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
-              onClick={handleDelete}
+              onClick={() => handleDelete(id)}
             >
               Delete
             </button>
