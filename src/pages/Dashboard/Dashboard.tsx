@@ -82,11 +82,11 @@ const Dashboard = () => {
         title: item.title,
         description: item.description,
         type: item.type,
-        sharedUrl: item.link || "-",
+        sharedLink: item.link || "-",
         originalPayload: item,
       }));
 
-      console.log("Workspaces to render in table:", list);
+      // console.log("Workspaces to render in table:", list);
 
       setWorkspaceList(list);
       setOriginalList(list);
@@ -175,7 +175,7 @@ const Dashboard = () => {
         setSharedLinkToShow(link);
         setShowShareModal(true);
         const updated = workspaceList.map((w) =>
-          w.id === workspaceID ? { ...w, sharedUrl: link } : w
+          w.id === workspaceID ? { ...w, sharedLink: link } : w
         );
         setWorkspaceList(updated);
         setOriginalList(updated);
@@ -392,7 +392,7 @@ const Dashboard = () => {
                       <td className={styleTable}>{w.title}</td>
                       <td className={styleTable}>{w.description}</td>
                       <td className={styleTable}>{w.type}</td>
-                      <td className={styleTable}>{w.sharedUrl || "-"}</td>
+                      <td className={styleTable}>{w.sharedLink || "-"}</td>
                       <td className="border border-black px-[6px] py-[5px] flex justify-center space-x-[4px]">
                         <button
                           onClick={() => handleViewWorkspace(w.id)}
@@ -409,7 +409,7 @@ const Dashboard = () => {
                           <FaEdit />
                         </button>
                         <button
-                          onClick={() => handleShare(w.sharedUrl !== "-" ? w.sharedUrl : "", w.id)}
+                          onClick={() => handleShare(w.sharedLink !== "-" ? w.sharedLink : "", w.id)}
                           className="text-black bg-minty border-none rounded-[4px] cursor-pointer py-[4px]"
                           title="Share"
                         >
