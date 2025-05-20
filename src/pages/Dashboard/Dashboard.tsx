@@ -101,7 +101,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchWorkspaceData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startDate, endDate, typeFilter, viewFilter]);
+  }, []);
 
   // Delete workspace API (multiple IDs possible)
   const deleteWorkspace = async (workspaceIDs: string[]) => {
@@ -334,45 +334,45 @@ const Dashboard = () => {
           {/* Filter Section */}
           <div className="flex flex-col justify-between mb-[50px] gap-[16px] pl-[25px]">
             <div className="flex flex-row gap-[16px]">
-              <div className="flex flex-col items-start gap-2">
-                <label className="font-semibold">Start Date:</label>
+              <div className="flex flex-col items-start gap-[4px]">
+                <label className="">Start Date:</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
               </div>
-              <div className="flex flex-col items-start gap-2">
+              <div className="flex flex-col items-start gap-[4px]">
                 <label className="font-semibold">End Date:</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
               </div>
             </div>
 
             <div className="flex flex-row gap-[16px]">
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start gap-[4px]">
                 <label className="font-semibold">Type:</label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 >
                   <option value="All">All</option>
                   <option value="Summarization">Summarization</option>
                   <option value="Transcription">Transcription</option>
                 </select>
               </div>
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start gap-[4px]">
                 <label className="font-semibold">View:</label>
                 <select
                   value={viewFilter}
                   onChange={(e) => setViewFilter(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 >
                   <option value="All">All</option>
                   <option value="Shared">Shared</option>
@@ -405,7 +405,7 @@ const Dashboard = () => {
           ) : workspaceList.length === 0 ? (
             <p className="text-center">No workspaces found.</p>
           ) : (
-            <div className="overflow-hidden">
+            <div className="overflow-hidden pb-[50px]">
               <table className="min-w-full max-w-full px-[20px] text-sm text-left table-auto">
                 <thead className="bg-grey">
                   <tr className={styleTable}>
@@ -420,14 +420,15 @@ const Dashboard = () => {
                 </thead>
                 <tbody>
                   {workspaceList.map((w, index) => (
-                    <tr key={w.id} className={index % 2 === 0 ? "bg-white" : "bg-color_secondary" }>
-                      <td className={styleTable}>{index + 1}</td>
-                      <td className={styleTable}>{w.date}</td>
-                      <td className={styleTable}>{w.title}</td>
-                      <td className={styleTable}>{w.description}</td>
-                      <td className={styleTable}>{w.type}</td>
-                      <td className={styleTable}>{w.sharedLink || "-"}</td>
-                      <td className="border-l border-r border-t border-black px-[6px] py-[5px] flex flex-row h-[90px] justify-center items-center space-x-[4px]">
+                    <tr key={w.id} className={
+                      `${index % 2 === 0 ? "bg-white" : "bg-color_secondary"}`}>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{index + 1}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.date}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.title}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.description}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.type}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.sharedLink || "-"}</td>
+                      <td className={`border-l border-r border-t border-black px-[6px] py-[5px] flex flex-row h-[90px] justify-center items-center space-x-[4px] ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>
                         <button
                           onClick={() => handleViewWorkspace(w.id)}
                           className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"
