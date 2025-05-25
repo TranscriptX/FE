@@ -76,7 +76,8 @@ const RegisterPage = () => {
                     password: "",
                     confirmPassword: "",
                 });
-            }else if (result.message === "Email already registered") {
+            }
+            else if (result.message === "Email already registered") {
                 setError("An account with this email already exists.");
                 setShowModal(false);
             }

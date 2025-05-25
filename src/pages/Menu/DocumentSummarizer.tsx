@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Copy from "../../assets/copy.svg";
 import API_PATH from "../../api/API_PATH";
 import { getUserIdFromToken } from "../../utils/Helper";
+import Loading from "../../assets/loading.svg";
 
 const WORKSPACE_SHARE_ENDPOINT = `${API_PATH}/api/workspaces/share`;
 
@@ -16,8 +17,9 @@ const DocumentSummarizer = () => {
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [summaryResult, setSummaryResult] = useState("");
   const [isSummarized, setIsSummarized] = useState(false);
-  
-  const [workspaceID, setWorkspaceID] = useState<string | null>(null); // Dynamically set workspaceID
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [workspaceID, setWorkspaceID] = useState<string | null>(null); // To store dynamic workspaceID
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharedLink, setSharedLink] = useState(""); // To store the generated link
 
@@ -29,6 +31,7 @@ const DocumentSummarizer = () => {
       setFile(e.target.files[0]);
       setIsSummarized(false);
       setSummaryResult("");
+      setWorkspaceID(null); // reset workspaceID on new file upload
     }
   };
 
@@ -48,6 +51,7 @@ const DocumentSummarizer = () => {
 
     if (!token) {
       alert("Authorization token not found. Please log in.");
+      navigate("/login");
       return;
     }
 
@@ -55,8 +59,11 @@ const DocumentSummarizer = () => {
 
     if (!userID) {
       alert("Invalid token. Please log in again.");
+      navigate("/login");
       return;
     }
+
+    setIsLoading(true);
 
     try {
       let fileBase64: string | null = null;
@@ -65,18 +72,19 @@ const DocumentSummarizer = () => {
         fileBase64 = await convertFileToBase64(file);
       }
 
-      // Determine mode: document upload or workspace summarization
+      // Prepare payload: only one of file or workspaceID should be filled
       const payload = {
         userID,
         name: workspaceTitle || null,
         description: workspaceDescription || null,
-        file: fileBase64,                       // Only used for uploaded files
-        workspaceID: workspaceID || null,       // Only used for existing transcription
+        file: file ? fileBase64 : null,
+        workspaceID: file ? null : workspaceID,
       };
 
-      // Enforce API contract: one of file or workspaceID must be null
-      if (!file && !workspaceID) {
-        alert("Please upload a file or choose an existing transcription to summarize.");
+      // Validate presence of file or workspaceID
+      if (!payload.file && !payload.workspaceID) {
+        alert("Please upload a file or select an existing transcription to summarize.");
+        setIsLoading(false);
         return;
       }
 
@@ -91,45 +99,66 @@ const DocumentSummarizer = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("API response payload:", data.payload);
         setSummaryResult(data.payload.result);
+        setWorkspaceID(data.payload.workspaceID); // Save workspaceID from response
         setIsSummarized(true);
       } else {
         const errorData = await response.json();
         alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+        if (errorData.message === "Invalid or expired token. Please login."){
+          navigate("/login");
+        }
       }
     } catch (error) {
       console.error("Error during summarization:", error);
       alert("An error occurred while summarizing.");
+    } finally{
+      setIsLoading(false);
     }
   };
 
   // Handle Share - Making API request to share workspace
   const handleShare = async () => {
-    if (workspaceID) { // Ensure workspaceID is valid
-      const payload = {
-        workspaceID: workspaceID, // Using dynamic workspaceID
-        isGrantAccess: true, // Set to false to remove share access
-        
-      };
+    if (!workspaceID) {
+      alert("Workspace ID is missing. Please summarize first.");
+      return;
+    }
 
-      try {
-        const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("User not authenticated. Please login.");
+      navigate("/login");
+      return;
+    }
 
-        if (response.ok) {
-          const data = await response.json();
-          setSharedLink(data.payload.link);  // Set the link in state
-          setShowShareModal(true);
-        } else {
-          alert("Failed to share workspace. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while sharing the workspace.");
+    const payload = {
+      workspaceID,
+      isGrantAccess: true,
+    };
+
+    try {
+      const response = await fetch(WORKSPACE_SHARE_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSharedLink(data.payload.link);
+        setShowShareModal(true);
+      } else {
+        const errorText = await response.text();
+        console.error("Share API error response:", errorText);
+        alert(`Failed to share workspace: ${errorText}`);
       }
+    } catch (error) {
+      console.error("Error sharing workspace:", error);
+      alert("An error occurred while sharing the workspace.");
     }
   };
 
@@ -163,14 +192,14 @@ const DocumentSummarizer = () => {
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
             <div className="flex flex-row items-center">
               <textarea
-                value={sharedLink} // The shared link
+                value={sharedLink}
                 readOnly
                 className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
                 rows={1}
               />
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(sharedLink) // Copy the link
+                  navigator.clipboard.writeText(sharedLink)
                     .then(() => alert("Link copied to clipboard!"))
                     .catch(() => alert("Failed to copy link. Please try again."));
                 }}
@@ -190,6 +219,19 @@ const DocumentSummarizer = () => {
         </div>
       )}
 
+      {isLoading && (
+        <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
+          {/* Ganti ini dengan komponen/icon loading kamu */}
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
+            <p className="text-[24px] font-[600] pb-[16px]">Summarizing Document...</p>
+            <div className="w-[48px] h-[48px] mx-auto">
+              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
+              <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white min-h-screen flex justify-center items-center">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[400px] mt-4">
           <h1 className="text-3xl font-bold text-center mb-1">Document Summarizer</h1>
@@ -199,6 +241,7 @@ const DocumentSummarizer = () => {
             <label className="text-black font-[600] mb-[5px]">Click here to Upload Document</label>
             <input
               type="file"
+              disabled={isLoading}
               onChange={handleFileChange}
               accept=".txt,.doc,.docx,.pdf"
               className="w-full text-darker_grey text-[18px] bg-color_secondary border-2 border-dark_grey rounded-[5px] p-[20px] cursor-pointer shadow-[0,1px,4px,rgba(0,0,0,0.25)] hover:border-dark_grey hover:ring-2 hover:ring-dark_grey focus:ring-2 focus:ring-dark_grey"
@@ -213,6 +256,7 @@ const DocumentSummarizer = () => {
               <label className="block text-black font-[600] mb-2">Workspace Title</label>
               <input
                 type="text"
+                disabled={isSummarized || isLoading}
                 placeholder="Enter workspace title"
                 value={workspaceTitle}
                 onChange={(e) => setWorkspaceTitle(e.target.value)}
@@ -224,6 +268,7 @@ const DocumentSummarizer = () => {
               <label className="block text-black font-[600] mb-2">Workspace Description</label>
               <textarea
                 placeholder="Enter workspace description"
+                disabled={isSummarized || isLoading}
                 value={workspaceDescription}
                 onChange={(e) => setWorkspaceDescription(e.target.value)}
                 className={inputStyle}
@@ -236,7 +281,7 @@ const DocumentSummarizer = () => {
             <div className="flex justify-end mb-6">
               <button
                 onClick={handleSummarize}
-                disabled={!file}
+                disabled={isLoading || !file}
                 className={`py-[8px] px-[24px] mt-[10px] ${!file ? 'bg-color_secondary' : 'bg-biru_muda text-white hover:ring-1 hover:ring-biru_muda cursor-pointer border-biru_muda'} rounded-[5px] shadow-[0,1px,5px,rgba(50,173,230,0.25)] transition-all duration-400 ease-in-out`}
               >
                 Summarize
@@ -244,7 +289,7 @@ const DocumentSummarizer = () => {
             </div>
           )}
 
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-[16px]">
             {isSummarized && (
               <div className="mt-4">
                 <label className="block font-[600] mt-[10px]">Summary Result:</label>
@@ -257,12 +302,14 @@ const DocumentSummarizer = () => {
                 <div className="mt-4 flex space-x-[12px] justify-end">
                   <button
                     onClick={handleShare}
+                    disabled={isLoading}
                     className="py-[8px] px-[24px] mt-[10px] bg-ijo text-white hover:ring-1 hover:ring-ijo cursor-pointer border-ijo rounded-[5px] shadow-[0,1px,5px,rgba(52,199,89,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Share
                   </button>
                   <button
                     onClick={handleExport}
+                    disabled={isLoading}
                     className="py-[8px] px-[24px] mt-[10px] bg-minty text-white hover:ring-1 hover:ring-minty cursor-pointer border-minty rounded-[5px] shadow-[0,1px,2px,rgba(0,199,190,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Export

@@ -1,69 +1,168 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
-import Copy from "../../assets/copy.svg"
+import Copy from "../../assets/copy.svg";
+import API_PATH from "../../api/API_PATH";
+import { getUserIdFromToken } from "../../utils/Helper";
 
 const ViewWorkspace = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const data = location.state || {};
+  const { id } = useParams<{ id: string }>();
 
-  const {
-    title = "Untitled",
-    author = "Unknown",
-    createdDate = "-",
-    originalFileName = "-",
-    sharedUrl = "-",
-    description = "-",
-    result = "-",
-    type = "Transcription",
-    id = null, // Assume we have an id for workspace
-  } = data;
-
-  // Format the createdDate to a readable format if it's not '-'
-  const formattedDate = createdDate !== "-" ? new Date(createdDate).toLocaleDateString() : "-";
-
+  // State untuk data workspace, loading, error, modal
+  const [workspaceData, setWorkspaceData] = useState<any>(location.state || null);
+  const [loading, setLoading] = useState(!location.state);
+  const [error, setError] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
+  const [workspaceList, setWorkspaceList] = useState<any[]>([]);
+  const [originalList, setOriginalList] = useState<any[]>([]);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
-  // Simulating a workspace list and a function to handle deletion
-  const handleDelete = () => {
-    setShowDeleteModal(true);
-  };
+  // Ambil token dan userID dari localStorage/helper
+  const token = localStorage.getItem("token");
+  const userID = token ? getUserIdFromToken(token) : null;
 
-  const handleShare = () => {
-    setShowShareModal(true);
-  };
+  // Fetch data jika belum ada dan ada id + token + userID
+  useEffect(() => {
+    if (!id || !token || !userID) return;
 
+    setLoading(true);
+    fetch(`${API_PATH}/api/workspaces/detail`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ workspaceID: id, userID }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Workspace not found");
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Fetched detail:", data.payload);
+        setWorkspaceData(data.payload);
+        setError(null);
+      })
+      .catch((err) => setError(err.message || "Failed to load workspace"))
+      .finally(() => setLoading(false));
+  }, [id, token, userID]);
+
+  // Format tanggal tampil
+  const formattedDate =
+    workspaceData?.createdDate && workspaceData.createdDate !== "-"
+      ? new Date(workspaceData.createdDate).toLocaleDateString()
+      : "-";
+
+  // Modal handlers
+  const handleShare = () => setShowShareModal(true);
   const closeModal = () => {
     setShowShareModal(false);
     setShowDeleteModal(false);
   };
 
-  const handleEditWorkspace = () => {
-    navigate(`/edit-workspace/${data.id}`);
+  // Edit workspace handler
+  const handleEditWorkspace = (workspaceId: string | undefined) => {
+    navigate(`/edit-workspace/${workspaceId}`);
   };
 
-  const confirmDelete = () => {
-    // Handle deletion logic here, maybe removing the workspace from an API or state
-    console.log(`Workspace with ID ${id} deleted`);
+  const deleteWorkspace = async (id: string[]) => {
+    if (!token || !userID) return false;
+      try {
+        const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ workspaceID: id, userID }),
+        });
+  
+        // Accept any 2xx success response
+        if (!res.ok) throw new Error("Failed to delete workspace");
+        return true;
+      } catch (err) {
+        console.error(err);
+        return false;
+      }
+    };
 
-    // After deletion, we close the modal and navigate back to Dashboard or other page
-    setShowDeleteModal(false);
-    navigate("/dashboard"); // Navigate back to the dashboard or workspace list
+  const handleDelete = (workspaceId: string | undefined) => {
+    if (!workspaceId) return;
+    console.log("Clicked delete on workspace ID:", workspaceId);
+    setWorkspaceToDelete(workspaceId);
+    setShowDeleteModal(true);
   };
 
-  const inputStyle = "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
-  const textStyle = "block text-black font-[600]"
-  const formStyle = "mb-[18px]"
+  const confirmDelete = async () => {
+    console.log("Confirming delete for ID:", workspaceToDelete);
+    if (!workspaceToDelete) return;
+    const success = await deleteWorkspace([workspaceToDelete!]);
+    if (success) {
+      const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
+      setWorkspaceList(updated);
+      setOriginalList(updated);
+      setWorkspaceToDelete(null);
+      setShowDeleteModal(false);
+      setShowDeleteSuccess(false);
+      navigate("/dashboard");
+    } else {
+      alert("Failed to delete workspace. Please try again.");
+      return;
+    }
+  };
 
-  // Display fallback if no state provided (e.g., user refreshes)
-  if (!location.state) {
+  // Copy link handler for share modal
+  const copyLinkToClipboard = () => {
+    if (workspaceData?.sharedLink) {
+      navigator.clipboard
+        .writeText(workspaceData.sharedLink)
+        .then(() => alert("Link copied to clipboard!"))
+        .catch(() => alert("Failed to copy link. Please try again."));
+    } else {
+      alert("No link available to copy.");
+    }
+  };
+
+  // Styling classes (sama dengan yang kamu berikan)
+  const inputStyle =
+    "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
+  const textStyle = "block text-black font-[600]";
+  const formStyle = "mb-[18px]";
+
+  // Loading state
+  if (loading) {
     return (
-      <div className="text-center mt-10 text-red-500">
-        No workspace data provided. Go back to Dashboard.
-      </div>
+      <>
+        <Navbar currentPage="Dashboard" />
+        <div className="text-center mt-10">Loading workspace data...</div>
+      </>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <>
+        <Navbar currentPage="Dashboard" />
+        <div className="text-center mt-10 text-red-600">Error: {error}</div>
+      </>
+    );
+  }
+
+  // No data state
+  if (!workspaceData) {
+    return (
+      <>
+        <Navbar currentPage="Dashboard" />
+        <div className="text-center mt-10 text-red-600">
+          No workspace data available. Go back to Dashboard.
+        </div>
+      </>
     );
   }
 
@@ -71,47 +170,60 @@ const ViewWorkspace = () => {
     <>
       <Navbar currentPage="Dashboard" />
 
-      {/* Modal Pop-up for Share */}
+      {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 flex justify-center items-center opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary"></div>
           <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0">Successfully Created Share Link</h2>
             <img src={checkSign} alt="check" className="size-[96px] mb-[12px]" />
-            
             <div className="flex flex-row items-center">
-              {/* Textbox for the link */}
               <textarea
-                value="transcriptx/shared/123"  // Link yang akan ditampilkan
-                readOnly  // Agar tidak bisa diubah oleh pengguna
+                value={workspaceData?.sharedLink || "-"}
+                readOnly
                 className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
-                rows={1}  // Menyesuaikan tinggi textarea
+                rows={1}
               />
-              
-              {/* Copy Link Button */}
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText('transcriptx/shared/123') // Link yang akan disalin
-                    .then(() => {
-                      alert("Link copied to clipboard!"); // Memberikan konfirmasi ke pengguna
-                    })
-                    .catch(error => {
-                      alert("Failed to copy link. Please try again."); // Menangani error jika gagal
-                    });
-                }}
-                className="py-2 px-6 bg-white border-l-2 border-r-0 border-t-0 border-b-0 text-black rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out cursor-pointer"
+                onClick={copyLinkToClipboard}
+                className="py-2 px-6 bg-white border-l-2 rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out cursor-pointer"
               >
                 <img src={Copy} alt="copy" className="size-[14px]" />
               </button>
             </div>
-              
-              <p>____________________________________________</p>
+            <p>____________________________________________</p>
+            <button
+              onClick={closeModal}
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pop up Delete Success */}
+      {showDeleteSuccess && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0 text-red-600">Success</h2>
+            <p className="break-all max-w-[320px] text-center mb-4 mt-2 text-gray-700">
+              Your workspace was successfully deleted.
+            </p>
+            <p>____________________________________________</p>
+            <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
               <button
-                onClick={closeModal}
-                className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+                onClick={() => {
+                  setShowDeleteSuccess(false);
+                  navigate("/dashboard");
+                  confirmDelete();
+                }}
+                className="bg-ijo text-white font-bold px-[12px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover cursor-pointer"
               >
                 OK
-              </button>              
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -119,26 +231,30 @@ const ViewWorkspace = () => {
       {/* Modal Delete */}
       {showDeleteModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
-          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary"></div>
-          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
             <h2 className="text-xl font-bold mb-0 text-red-600">Are you sure?</h2>
-            <img src={checkSign} alt="check" className="size-[96px]" />
             <p className="break-all max-w-[300px] text-center mb-4 mt-2 text-gray-700">
-              Do you want to delete this workspace? 
-              <br/>
+              Do you want to delete this workspace?
+              <br />
               This action cannot be undone.
             </p>
             <p>____________________________________________</p>
-            <div className="flex justify-end space-x-[8px] mb-[8px]">
+            <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
               <button
-                onClick={() => setShowDeleteModal(false)}
-                className="bg-color_secondary text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                }}
+                className="bg-grey text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
-                className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
+                onClick={() => {
+                  setShowDeleteSuccess(true);
+                  setShowDeleteModal(false);
+                }}
+                className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red cursor-pointer"
               >
                 Delete
               </button>
@@ -148,26 +264,20 @@ const ViewWorkspace = () => {
       )}
 
       <div className="bg-white min-h-screen flex flex-col justify-start items-center">
-        <h1 className="text-3xl font-bold text-center mt-[100px]">{title}</h1>
+        <h1 className="text-3xl font-bold text-center mt-[100px]">{workspaceData?.title || "Untitled"}</h1>
         <div className="bg-white p-[60px] w-full max-w-[1000px]">
-          
           <div className="grid grid-cols-2 gap-[36px] mb-6">
             <div>
               <div className={formStyle}>
                 <label className={textStyle}>Author</label>
-                <input
-                  className={inputStyle}
-                  type="text"
-                  defaultValue={author}
-                  readOnly
-                />
+                <input className={inputStyle} type="text" value={workspaceData?.author || "Unknown"} readOnly />
               </div>
               <div className={formStyle}>
                 <label className={textStyle}>Created Date</label>
                 <input
                   className={inputStyle}
                   type="text"
-                  defaultValue={formattedDate}
+                  value={formattedDate}
                   readOnly
                 />
               </div>
@@ -176,7 +286,7 @@ const ViewWorkspace = () => {
                 <input
                   className={inputStyle}
                   type="text"
-                  defaultValue={originalFileName}
+                  value={workspaceData?.fileName || "-"}
                   readOnly
                 />
               </div>
@@ -188,7 +298,7 @@ const ViewWorkspace = () => {
                 <input
                   className={inputStyle}
                   type="text"
-                  defaultValue={sharedUrl}
+                  value={workspaceData?.sharedLink || "-"}
                   readOnly
                 />
               </div>
@@ -200,20 +310,34 @@ const ViewWorkspace = () => {
             <textarea
               className={inputStyle}
               rows={4}
-              defaultValue={description}
+              value={workspaceData?.description || "-"}
               readOnly
             />
           </div>
 
-          <div className={formStyle}>
-            <label className={textStyle}>Result</label>
-            <textarea
-              className={inputStyle}
-              rows={4}
-              defaultValue={result}
-              readOnly
-            />
-          </div>
+          {workspaceData?.transcription && (
+            <div className={formStyle}>
+              <label className={textStyle}>Transcription Result</label>
+              <textarea
+                className={inputStyle}
+                rows={4}
+                value={workspaceData.transcription}
+                readOnly
+              />
+            </div>
+          )}
+
+          {workspaceData?.summarization && (
+            <div className={formStyle}>
+              <label className={textStyle}>Summarization Result</label>
+              <textarea
+                className={inputStyle}
+                rows={4}
+                value={workspaceData.summarization}
+                readOnly
+              />
+            </div>
+          )}
 
           <div className="flex justify-end space-x-[12px]">
             <button
@@ -224,27 +348,25 @@ const ViewWorkspace = () => {
             </button>
             <button
               className="bg-minty text-white font-bold px-[24px] py-[4px] rounded-[4px] border-minty hover:bg-minty_dark hover:border-minty_dark cursor-pointer"
-              onClick={() => navigate("/ExportWorkspace", { state: data })}
+              onClick={() => navigate("/ExportWorkspace", { state: workspaceData })}
             >
               Export
             </button>
             <button
               className="bg-kuning text-white font-bold px-[24px] py-[4px] rounded-[4px] border-kuning hover:bg-kuning_dark hover:border-kuning_dark cursor-pointer"
-              onClick={handleEditWorkspace}
+              onClick={() => handleEditWorkspace(id)}
             >
               Edit
             </button>
             <button
               className="bg-[red] text-white font-bold px-[24px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
-              onClick={handleDelete}
+              onClick={() => handleDelete(id)}
             >
               Delete
             </button>
           </div>
         </div>
       </div>
-
-      
     </>
   );
 };
