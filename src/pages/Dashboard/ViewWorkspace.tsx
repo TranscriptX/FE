@@ -19,7 +19,6 @@ const ViewWorkspace = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
   const [workspaceList, setWorkspaceList] = useState<any[]>([]);
-  const [originalList, setOriginalList] = useState<any[]>([]);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
   // Ambil token dan userID dari localStorage/helper
@@ -105,7 +104,7 @@ const ViewWorkspace = () => {
     if (success) {
       const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
       setWorkspaceList(updated);
-      setOriginalList(updated);
+      // setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
       setShowDeleteSuccess(false);

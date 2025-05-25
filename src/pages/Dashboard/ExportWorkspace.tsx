@@ -7,7 +7,7 @@ import API_PATH from "../../api/API_PATH";
 const ExportWorkspace = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [workspaceData, setWorkspaceData] = useState<any>(location.state || null);
+  const [workspaceData] = useState<any>(location.state || null);
 
   const [showExportModal, setShowExportModal] = useState(false);
   const [loadingExport, setLoadingExport] = useState(false);

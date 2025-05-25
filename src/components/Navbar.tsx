@@ -1,12 +1,11 @@
-import { useContext, useState, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useState, useEffect } from "react";
+// import { AuthContext } from "../context/AuthContext";
 import NavbarType from "../types/components/NavbarType";
 import { useNavigate } from "react-router";
 import profileIcon from "../assets/profile_icon.svg"
-import { decodeJWT } from "../utils/Helper";
+// import { decodeJWT } from "../utils/Helper";
 
 const Navbar = (props: NavbarType) => {
-    const authContext = useContext(AuthContext);
     const navigate = useNavigate();
 
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -19,7 +18,6 @@ const Navbar = (props: NavbarType) => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-            const decoded = decodeJWT(token);
             const storedName = localStorage.getItem("name");
             if (storedName) {
                 setUserName(storedName);
