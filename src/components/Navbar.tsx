@@ -13,7 +13,9 @@ const Navbar = (props: NavbarType) => {
     const [userName, setUserName] = useState("User");
 
     const hideProfileForPages = ["Login", "Register", "Forgot", "Reset"];
+    const hidePages = ["None", "Login", "Register"];
     const shouldHideProfile = hideProfileForPages.includes(props.currentPage);
+    const shouldHidePages = hidePages.includes(props.currentPage);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -58,30 +60,33 @@ const Navbar = (props: NavbarType) => {
             </div>
 
 			<nav>
-				<ul className="flex flex-row space-x-6 list-none items-center">
+                {!shouldHidePages && (
+                    <ul className="flex flex-row space-x-6 list-none items-center">
 
-					{links.map((item, index) => {
-                        return (
-							<li key={index} className="mx-[12px]">
-								<a className={`mx-4 cursor-pointer ${
-                                        item.isActive
-                                            ? "text-black underline decoration-black"
-                                            : "text-black hover:underline hover:decoration-black hover:text-black"
-                                    }`} 
-                                    onClick={(e) => { 
-                                    e.preventDefault(); 
-                                    navigate(item.link);
-                                    }}
-                                >
-                                    {item.text}
-								</a>
-							</li>
-						);
-					})}
-				</ul>
+                        {links.map((item, index) => {
+                            return (
+                                <li key={index} className="mx-[12px]">
+                                    <a className={`mx-4 cursor-pointer ${
+                                            item.isActive
+                                                ? "text-black underline decoration-black"
+                                                : "text-black hover:underline hover:decoration-black hover:text-black"
+                                        }`} 
+                                        onClick={(e) => { 
+                                        e.preventDefault(); 
+                                        navigate(item.link);
+                                        }}
+                                    >
+                                        {item.text}
+                                    </a>
+                                </li>
+                            );
+                        })}
+                    </ul>     
+                )}
+				
 			</nav>
 
-            {props.currentPage != "None" && !shouldHideProfile && (
+            {props.currentPage != "None" && !shouldHideProfile && !shouldHidePages && (
             <div className="ml-auto flex items-center h-full ">
                     <button onClick={toggleDropdown} className="border-none bg-color_secondary cursor-pointer items-center pr-[10px]" disabled={!showProfileIcon}>
                         {showProfileIcon && (

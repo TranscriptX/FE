@@ -29,27 +29,14 @@ const ForgotPage = () => {
         }
     }
 
+    const handleLogin = async () => {
+        navigate("/login")
+    }
+
     return (
         <>
             <Navbar currentPage="Forgot"/>
             <div className="min-h-screen flex flex-row items-center justify-center bg-white">
-                
-            {/* Testing
-            {process.env.NODE_ENV === "development" && (
-                <button
-                    onClick={() => {
-                        if (!email) {
-                            setError("Please enter an email first.");
-                            return;
-                        }
-                        setError("");
-                        setShowModal(true);
-                    }}
-                    className="absolute top-[100px] left-[50px] bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-all"
-                >
-                    Simulate Success (Dev)
-                </button>
-            )} */}
 
                 <div className="z-10 bg-color_secondary w-full max-w-[500px] min-h-[400px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">
                     <h1 className="text-2xl font-bold text-center mb-[10px] mt-[30px]">Forgot Password?</h1>
@@ -91,7 +78,7 @@ const ForgotPage = () => {
 
                     <p className="text-center text-sm mt-4">
                     Remember your password?{" "}
-                        <a href="/login" className="text-biru no-underline hover:underline">
+                        <a onClick={handleLogin} className="text-biru no-underline hover:underline cursor-pointer">
                             Log in
                         </a>
                     </p>
