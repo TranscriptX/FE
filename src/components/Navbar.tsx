@@ -13,7 +13,7 @@ const Navbar = (props: NavbarType) => {
     const [userName, setUserName] = useState("User");
 
     const hideProfileForPages = ["Login", "Register", "Forgot", "Reset"];
-    const hidePages = ["None", "Login", "Register"];
+    const hidePages = ["None", "Login", "Register", "Forgot", "Reset"];
     const shouldHideProfile = hideProfileForPages.includes(props.currentPage);
     const shouldHidePages = hidePages.includes(props.currentPage);
 
