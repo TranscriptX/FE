@@ -9,7 +9,7 @@ import API_PATH from "../../api/API_PATH";
 
 const Dashboard = () => {
   const [workspaceList, setWorkspaceList] = useState<any[]>([]);
-  const [originalList, setOriginalList] = useState<any[]>([]);
+  // const [originalList, setOriginalList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,6 +20,7 @@ const Dashboard = () => {
 
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
   const [sharedLinkToShow, setSharedLinkToShow] = useState<string>("");
 
@@ -30,7 +31,6 @@ const Dashboard = () => {
 
   const fetchWorkspaceData = async () => {
     if (!token || !userID) {
-      setError("User not authenticated");
       setLoading(false);
       return;
     }
@@ -63,27 +63,28 @@ const Dashboard = () => {
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Failed to fetch: ${res.status} ${text}`);
+        alert("User not authenticated. Please login.");
+        navigate("/login");
+        return;
       }
 
       const data = await res.json();
 
       if (data.statusCode !== 200) throw new Error(data.message || "Failed to fetch");
 
-      // Map response to format yang dipakai UI
-      const list = data.payload.map((item: any) => ({
-        id: item.workspaceID,
-        date: item.createdDate.split("T")[0],
-        title: item.title,
-        description: item.description,
-        type: item.type,
-        sharedUrl: item.link || "-",
-        originalPayload: item, // simpan data asli supaya bisa dikirim ke state
-      }));
+      const list = data.payload
+        .sort((a: any, b: any) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
+        .map((item: any) => ({
+          id: item.workspaceID,
+          date: item.createdDate.split("T")[0],
+          title: item.title,
+          description: item.description,
+          type: item.type,
+          sharedLink: item.link || "-",
+          originalPayload: item,
+        }));
 
       setWorkspaceList(list);
-      setOriginalList(list);
     } catch (err: any) {
       setError(err.message || "Error fetching workspaces");
     } finally {
@@ -96,7 +97,6 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Delete workspace API (multiple IDs possible)
   const deleteWorkspace = async (workspaceIDs: string[]) => {
     if (!token || !userID) return false;
     try {
@@ -108,7 +108,8 @@ const Dashboard = () => {
         },
         body: JSON.stringify({ workspaceID: workspaceIDs, userID }),
       });
-      if (res.status !== 204) throw new Error("Failed to delete workspace");
+
+      if (!res.ok) throw new Error("Failed to delete workspace");
       return true;
     } catch (err) {
       console.error(err);
@@ -122,9 +123,9 @@ const Dashboard = () => {
     if (success) {
       const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
       setWorkspaceList(updated);
-      setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
+      setShowDeleteSuccess(true);
     } else {
       alert("Failed to delete workspace. Please try again.");
     }
@@ -135,7 +136,6 @@ const Dashboard = () => {
     setShowDeleteModal(true);
   };
 
-  // Share workspace API
   const shareWorkspace = async (workspaceID: string) => {
     if (!token) return null;
     try {
@@ -166,22 +166,18 @@ const Dashboard = () => {
         setSharedLinkToShow(link);
         setShowShareModal(true);
         const updated = workspaceList.map((w) =>
-          w.id === workspaceID ? { ...w, sharedUrl: link } : w
+          w.id === workspaceID ? { ...w, sharedLink: link } : w
         );
         setWorkspaceList(updated);
-        setOriginalList(updated);
       } else {
         alert("Failed to create share link");
       }
     }
   };
 
-  // Navigation handlers
   const handleViewWorkspace = (id: string) => {
-    // Cari workspace yang dipilih
     const selected = workspaceList.find((w) => w.id === id);
     if (selected) {
-      // Kirim data lengkap (originalPayload) ke state saat navigate
       navigate(`/view-workspace/${id}`, { state: selected.originalPayload });
     }
   };
@@ -195,7 +191,6 @@ const Dashboard = () => {
     if (selected) navigate("/ExportWorkspace", { state: selected.originalPayload });
   };
 
-  // Filtering
   const handleApplyFilters = () => {
     fetchWorkspaceData();
   };
@@ -208,7 +203,7 @@ const Dashboard = () => {
     fetchWorkspaceData();
   };
 
-  const styleTable = "border border-black px-[6px] py-[3px]";
+  const styleTable = "border-l border-t border-black px-[6px] py-[3px] align-middle";
 
   return (
     <>
@@ -254,6 +249,28 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Pop up Delete Success */}
+      {showDeleteSuccess && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0 text-red-600">Success</h2>
+            <p className="break-all max-w-[320px] text-center mb-4 mt-2 text-gray-700">
+              Your workspace was successfully deleted.
+            </p>
+            <p>____________________________________________</p>
+            <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
+              <button
+                onClick={() => setShowDeleteSuccess(false)}
+                className="bg-ijo text-white font-bold px-[12px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover cursor-pointer"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Delete */}
       {showDeleteModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
@@ -274,7 +291,7 @@ const Dashboard = () => {
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
+                onClick={confirmDelete} // <-- panggil langsung confirmDelete
                 className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red cursor-pointer"
               >
                 Delete
@@ -291,45 +308,46 @@ const Dashboard = () => {
           {/* Filter Section */}
           <div className="flex flex-col justify-between mb-[50px] gap-[16px] pl-[25px]">
             <div className="flex flex-row gap-[16px]">
-              <div className="flex flex-col items-start gap-2">
-                <label className="font-semibold">Start Date:</label>
+              <div className="flex flex-col items-start gap-[4px]">
+                <label className="">Start Date:</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
               </div>
-              <div className="flex flex-col items-start gap-2">
+              <div className="flex flex-col items-start gap-[4px]">
                 <label className="font-semibold">End Date:</label>
                 <input
                   type="date"
                   value={endDate}
+                  min={startDate || undefined} // Supaya endDate tidak bisa lebih kecil dari startDate
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
               </div>
             </div>
 
             <div className="flex flex-row gap-[16px]">
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start gap-[4px]">
                 <label className="font-semibold">Type:</label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 >
                   <option value="All">All</option>
                   <option value="Summarization">Summarization</option>
                   <option value="Transcription">Transcription</option>
                 </select>
               </div>
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start gap-[4px]">
                 <label className="font-semibold">View:</label>
                 <select
                   value={viewFilter}
                   onChange={(e) => setViewFilter(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-md"
+                  className="p-[4px] border border-dark_grey rounded-md font-sans"
                 >
                   <option value="All">All</option>
                   <option value="Shared">Shared</option>
@@ -362,29 +380,72 @@ const Dashboard = () => {
           ) : workspaceList.length === 0 ? (
             <p className="text-center">No workspaces found.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-screen max-w-screen px-[20px] text-sm text-left border-black table-fixed">
-                <thead>
-                  <tr>
+            <div className="overflow-hidden pb-[50px]">
+              <table className="min-w-full max-w-full px-[20px] text-sm text-left table-auto">
+                <thead className="bg-grey">
+                  <tr className={styleTable}>
                     <th className={styleTable}>No.</th>
                     <th className={styleTable}>Date</th>
                     <th className={styleTable}>Title</th>
                     <th className={styleTable}>Description</th>
                     <th className={styleTable}>Type</th>
                     <th className={styleTable}>Shared URL</th>
-                    <th className={styleTable}>Action</th>
+                    <th className="border-t border-l border-r border-black px-[6px] py-[3px]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {workspaceList.map((w, index) => (
-                    <tr key={w.id}>
-                      <td className={styleTable}>{index + 1}</td>
-                      <td className={styleTable}>{w.date}</td>
-                      <td className={styleTable}>{w.title}</td>
-                      <td className={styleTable}>{w.description}</td>
-                      <td className={styleTable}>{w.type}</td>
-                      <td className={styleTable}>{w.sharedUrl || "-"}</td>
-                      <td className="border border-black px-[6px] py-[5px] flex justify-center space-x-[4px]">
+                    <tr
+                      key={w.id}
+                      className={`${index % 2 === 0 ? "bg-white" : "bg-color_secondary"}`}
+                    >
+                      <td
+                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
+                          index === workspaceList.length - 1 ? "border-b border-black" : ""
+                        }`}
+                      >
+                        {index + 1}
+                      </td>
+                      <td
+                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
+                          index === workspaceList.length - 1 ? "border-b border-black" : ""
+                        }`}
+                      >
+                        {w.date}
+                      </td>
+                      <td
+                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
+                          index === workspaceList.length - 1 ? "border-b border-black" : ""
+                        }`}
+                      >
+                        {w.title}
+                      </td>
+                      <td
+                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
+                          index === workspaceList.length - 1 ? "border-b border-black" : ""
+                        }`}
+                      >
+                        {w.description}
+                      </td>
+                      <td
+                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
+                          index === workspaceList.length - 1 ? "border-b border-black" : ""
+                        }`}
+                      >
+                        {w.type}
+                      </td>
+                      <td
+                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
+                          index === workspaceList.length - 1 ? "border-b border-black" : ""
+                        }`}
+                      >
+                        {w.sharedLink || "-"}
+                      </td>
+                      <td
+                        className={`border-l border-r border-t border-black px-[6px] py-[5px] flex flex-row h-[90px] justify-center items-center space-x-[4px] ${
+                          index === workspaceList.length - 1 ? "border-b border-black" : ""
+                        }`}
+                      >
                         <button
                           onClick={() => handleViewWorkspace(w.id)}
                           className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"
@@ -400,7 +461,7 @@ const Dashboard = () => {
                           <FaEdit />
                         </button>
                         <button
-                          onClick={() => handleShare(w.sharedUrl !== "-" ? w.sharedUrl : "", w.id)}
+                          onClick={() => handleShare(w.sharedLink !== "-" ? w.sharedLink : "", w.id)}
                           className="text-black bg-minty border-none rounded-[4px] cursor-pointer py-[4px]"
                           title="Share"
                         >
