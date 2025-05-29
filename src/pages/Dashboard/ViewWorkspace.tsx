@@ -43,7 +43,7 @@ const ViewWorkspace = () => {
         return res.json();
       })
       .then((data) => {
-        console.log("Fetched detail:", data.payload);
+        // console.log("Fetched detail:", data.payload);
         setWorkspaceData(data.payload);
         setError(null);
       })
@@ -57,8 +57,42 @@ const ViewWorkspace = () => {
       ? new Date(workspaceData.createdDate).toLocaleDateString()
       : "-";
 
+  const shareWorkspace = async (workspaceID: string) => {
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID, isGrantAccess: true }),
+      });
+      if (!res.ok) throw new Error("Failed to share workspace");
+      const data = await res.json();
+      return data.payload?.link || null;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  };
+
   // Modal handlers
-  const handleShare = () => setShowShareModal(true);
+  const handleShare = async (workspaceId: string) => {
+    const link = await shareWorkspace(workspaceId);
+    if (link){
+        const updated = workspaceList.map((w) => 
+        w.id === id ? {...w, sharedLink: link } : w
+      );
+      setWorkspaceList(updated);
+      setWorkspaceData((prevWorkspaceData: any) => ({
+        ...prevWorkspaceData,
+        sharedLink: link
+      }));  
+    }
+    setShowShareModal(true);
+  };
+
   const closeModal = () => {
     setShowShareModal(false);
     setShowDeleteModal(false);
@@ -180,7 +214,7 @@ const ViewWorkspace = () => {
               <textarea
                 value={workspaceData?.sharedLink || "-"}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
                 rows={1}
               />
               <button
@@ -341,7 +375,7 @@ const ViewWorkspace = () => {
           <div className="flex justify-end space-x-[12px]">
             <button
               className="bg-ijo text-white font-bold px-[24px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover hover:border-ijoHover cursor-pointer"
-              onClick={handleShare}
+              onClick={() => handleShare(id || "Null")}
             >
               Share
             </button>
