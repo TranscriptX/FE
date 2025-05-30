@@ -85,6 +85,7 @@ const Dashboard = () => {
         }));
 
       setWorkspaceList(list);
+      // setOriginalList(list);
     } catch (err: any) {
       setError(err.message || "Error fetching workspaces");
     } finally {
@@ -97,6 +98,7 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Delete workspace API (multiple IDs possible)
   const deleteWorkspace = async (workspaceIDs: string[]) => {
     if (!token || !userID) return false;
     try {
@@ -123,11 +125,13 @@ const Dashboard = () => {
     if (success) {
       const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
       setWorkspaceList(updated);
+      // setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
-      setShowDeleteSuccess(true);
+      setShowDeleteSuccess(false);
     } else {
       alert("Failed to delete workspace. Please try again.");
+      return;
     }
   };
 
@@ -136,6 +140,7 @@ const Dashboard = () => {
     setShowDeleteModal(true);
   };
 
+  // Share workspace API
   const shareWorkspace = async (workspaceID: string) => {
     if (!token) return null;
     try {
@@ -169,12 +174,14 @@ const Dashboard = () => {
           w.id === workspaceID ? { ...w, sharedLink: link } : w
         );
         setWorkspaceList(updated);
+        // setOriginalList(updated);
       } else {
         alert("Failed to create share link");
       }
     }
   };
 
+  // Navigation handlers
   const handleViewWorkspace = (id: string) => {
     const selected = workspaceList.find((w) => w.id === id);
     if (selected) {
@@ -188,9 +195,13 @@ const Dashboard = () => {
 
   const handleExport = (id: string) => {
     const selected = workspaceList.find((w) => w.id === id);
-    if (selected) navigate("/ExportWorkspace", { state: selected.originalPayload });
+    if (selected)
+      navigate("/ExportWorkspace", {
+        state: { ...selected.originalPayload, workspaceID: selected.id },
+      });
   };
 
+  // Filtering
   const handleApplyFilters = () => {
     fetchWorkspaceData();
   };
@@ -221,7 +232,7 @@ const Dashboard = () => {
               <textarea
                 value={sharedLinkToShow}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
                 rows={1}
               />
 
@@ -261,7 +272,10 @@ const Dashboard = () => {
             <p>____________________________________________</p>
             <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
               <button
-                onClick={() => setShowDeleteSuccess(false)}
+                onClick={() => {
+                  setShowDeleteSuccess(false);
+                  confirmDelete();
+                }}
                 className="bg-ijo text-white font-bold px-[12px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover cursor-pointer"
               >
                 OK
@@ -285,13 +299,18 @@ const Dashboard = () => {
             <p>____________________________________________</p>
             <div className="flex flex-row justify-end space-x-[8px] mb-[16px]">
               <button
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                }}
                 className="bg-grey text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDelete} // <-- panggil langsung confirmDelete
+                onClick={() => {
+                  setShowDeleteSuccess(true);
+                  setShowDeleteModal(false);
+                }}
                 className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red cursor-pointer"
               >
                 Delete
@@ -322,7 +341,7 @@ const Dashboard = () => {
                 <input
                   type="date"
                   value={endDate}
-                  min={startDate || undefined} // Supaya endDate tidak bisa lebih kecil dari startDate
+                  min={startDate || undefined}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
