@@ -43,7 +43,6 @@ const ViewWorkspace = () => {
         return res.json();
       })
       .then((data) => {
-        // console.log("Fetched detail:", data.payload);
         setWorkspaceData(data.payload);
         setError(null);
       })
@@ -77,20 +76,18 @@ const ViewWorkspace = () => {
     }
   };
 
-  
-
   // Modal handlers
   const handleShare = async (workspaceId: string) => {
     const link = await shareWorkspace(workspaceId);
-    if (link){
-        const updated = workspaceList.map((w) => 
-        w.id === id ? {...w, sharedLink: link } : w
+    if (link) {
+      const updated = workspaceList.map((w) =>
+        w.id === id ? { ...w, sharedLink: link } : w
       );
       setWorkspaceList(updated);
       setWorkspaceData((prevWorkspaceData: any) => ({
         ...prevWorkspaceData,
-        sharedLink: link
-      }));  
+        sharedLink: link,
+      }));
     }
     setShowShareModal(true);
   };
@@ -107,24 +104,23 @@ const ViewWorkspace = () => {
 
   const deleteWorkspace = async (id: string[]) => {
     if (!token || !userID) return false;
-      try {
-        const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ workspaceID: id, userID }),
-        });
-  
-        // Accept any 2xx success response
-        if (!res.ok) throw new Error("Failed to delete workspace");
-        return true;
-      } catch (err) {
-        console.error(err);
-        return false;
-      }
-    };
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID: id, userID }),
+      });
+
+      if (!res.ok) throw new Error("Failed to delete workspace");
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
 
   const handleDelete = (workspaceId: string | undefined) => {
     if (!workspaceId) return;
@@ -140,7 +136,6 @@ const ViewWorkspace = () => {
     if (success) {
       const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
       setWorkspaceList(updated);
-      // setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
       setShowDeleteSuccess(false);
@@ -163,7 +158,7 @@ const ViewWorkspace = () => {
     }
   };
 
-  // Styling classes (sama dengan yang kamu berikan)
+  // Styling classes
   const inputStyle =
     "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
   const textStyle = "block text-black font-[600]";
@@ -412,3 +407,4 @@ const ViewWorkspace = () => {
 };
 
 export default ViewWorkspace;
+
