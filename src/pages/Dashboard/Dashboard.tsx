@@ -174,7 +174,6 @@ const Dashboard = () => {
           w.id === workspaceID ? { ...w, sharedLink: link } : w
         );
         setWorkspaceList(updated);
-        // setOriginalList(updated);
       } else {
         alert("Failed to create share link");
       }
@@ -195,10 +194,9 @@ const Dashboard = () => {
 
   const handleExport = (id: string) => {
     const selected = workspaceList.find((w) => w.id === id);
-    if (selected)
-      navigate("/ExportWorkspace", {
-        state: { ...selected.originalPayload, workspaceID: selected.id },
-      });
+    if (selected) {
+      navigate("/ExportWorkspace", { state: { ...selected.originalPayload, workspaceID: selected.id } });
+    }
   };
 
   // Filtering
@@ -341,7 +339,6 @@ const Dashboard = () => {
                 <input
                   type="date"
                   value={endDate}
-                  min={startDate || undefined}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
@@ -514,3 +511,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
