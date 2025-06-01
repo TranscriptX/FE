@@ -194,7 +194,7 @@ const DocumentSummarizer = () => {
               <textarea
                 value={sharedLink}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
                 rows={1}
               />
               <button

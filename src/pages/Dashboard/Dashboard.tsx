@@ -9,7 +9,7 @@ import API_PATH from "../../api/API_PATH";
 
 const Dashboard = () => {
   const [workspaceList, setWorkspaceList] = useState<any[]>([]);
-  const [originalList, setOriginalList] = useState<any[]>([]);
+  // const [originalList, setOriginalList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +90,7 @@ const Dashboard = () => {
       // console.log("Workspaces to render in table:", list);
 
       setWorkspaceList(list);
-      setOriginalList(list);
+      // setOriginalList(list);
     } catch (err: any) {
       setError(err.message || "Error fetching workspaces");
     } finally {
@@ -131,7 +131,7 @@ const Dashboard = () => {
     if (success) {
       const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
       setWorkspaceList(updated);
-      setOriginalList(updated);
+      // setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
       setShowDeleteSuccess(false);
@@ -180,7 +180,7 @@ const Dashboard = () => {
           w.id === workspaceID ? { ...w, sharedLink: link } : w
         );
         setWorkspaceList(updated);
-        setOriginalList(updated);
+        // setOriginalList(updated);
       } else {
         alert("Failed to create share link");
       }
@@ -239,7 +239,7 @@ const Dashboard = () => {
               <textarea
                 value={sharedLinkToShow}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
                 rows={1}
               />
 

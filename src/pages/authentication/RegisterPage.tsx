@@ -88,6 +88,10 @@ const RegisterPage = () => {
         }
     };
 
+    const handleLogin = async () => {
+        navigate("/login");
+    }
+
     return (
         <>
             <Navbar currentPage="Register"/>
@@ -162,7 +166,7 @@ const RegisterPage = () => {
 
                     <p className="text-center text-sm mt-4">
                     Already have an account?{" "}
-                    <a href="/login" className="text-biru no-underline hover:underline">
+                    <a onClick={handleLogin} className="text-biru no-underline hover:underline cursor-pointer">
                         Log in
                     </a>
                     </p>
