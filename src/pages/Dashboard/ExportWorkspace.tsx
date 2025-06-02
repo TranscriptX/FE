@@ -14,11 +14,19 @@ const ExportWorkspace = () => {
 
   const token = localStorage.getItem("token");
 
-  const handleExport = async () => {
-    if (!token || !workspaceData.workspaceID) {
-      alert("Missing token or workspace data");
+const handleExport = async () => {
+  if (!token) {
+    alert("Missing authentication token");
+    return;
+  }
+  
+    const workspaceID = workspaceData?.workspaceID || workspaceData?.id;
+
+    if (!workspaceID) {
+      alert("Missing workspace ID");
       return;
     }
+
     setLoadingExport(true);
     try {
       const workspaceID = workspaceData.workspaceID || workspaceData.id;
@@ -29,8 +37,7 @@ const ExportWorkspace = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ workspaceID }),
-      });
-      
+      });  
 
       if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
 

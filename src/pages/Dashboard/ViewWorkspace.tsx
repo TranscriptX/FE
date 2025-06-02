@@ -46,7 +46,6 @@ const ViewWorkspace = () => {
         return res.json();
       })
       .then((data) => {
-        // console.log("Fetched detail:", data.payload);
         setWorkspaceData(data.payload);
         setError(null);
       })
@@ -141,7 +140,6 @@ const ViewWorkspace = () => {
     if (success) {
       const updated = workspaceList.filter((w) => w.id !== workspaceToDelete);
       setWorkspaceList(updated);
-      // setOriginalList(updated);
       setWorkspaceToDelete(null);
       setShowDeleteModal(false);
       setShowDeleteSuccess(false);
@@ -208,7 +206,6 @@ const ViewWorkspace = () => {
     navigate("/Dashboard");
   };
 
-  // Styling classes (sama dengan yang kamu berikan)
   const inputStyle =
     "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
   const textStyle = "block text-black font-[600]";
@@ -451,6 +448,7 @@ const ViewWorkspace = () => {
             >
               Export
             </button>
+
             <button
               className="bg-kuning text-white font-bold px-[24px] py-[4px] rounded-[4px] border-kuning hover:bg-kuning_dark hover:border-kuning_dark cursor-pointer"
               onClick={() => handleEditWorkspace(id)}
@@ -471,3 +469,4 @@ const ViewWorkspace = () => {
 };
 
 export default ViewWorkspace;
+

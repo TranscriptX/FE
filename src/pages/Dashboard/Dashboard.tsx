@@ -67,8 +67,6 @@ const Dashboard = () => {
       });
 
       if (!res.ok) {
-        // const text = await res.text();
-        // throw new Error(`Failed to fetch: ${res.status} ${text}`);
         alert("User not authenticated. Please login.");
         navigate("/login");
         return;
@@ -120,7 +118,6 @@ const Dashboard = () => {
         body: JSON.stringify({ workspaceID: workspaceIDs, userID }),
       });
 
-      // Accept any 2xx success response
       if (!res.ok) throw new Error("Failed to delete workspace");
       return true;
     } catch (err) {
@@ -184,7 +181,6 @@ const Dashboard = () => {
           w.id === workspaceID ? { ...w, sharedLink: link } : w
         );
         setWorkspaceList(updated);
-        // setOriginalList(updated);
       } else {
         alert("Failed to create share link");
       }
@@ -193,10 +189,8 @@ const Dashboard = () => {
 
   // Navigation handlers
   const handleViewWorkspace = (id: string) => {
-    // Cari workspace yang dipilih
     const selected = workspaceList.find((w) => w.id === id);
     if (selected) {
-      // Kirim data lengkap (originalPayload) ke state saat navigate
       navigate(`/view-workspace/${id}`, { state: selected.originalPayload });
     }
   };
@@ -204,7 +198,6 @@ const Dashboard = () => {
   const handleEditWorkspace = (id: string) => {
     navigate(`/edit-workspace/${id}`);
   };
-
   // const handleExport = (id: string) => {
   //   const selected = workspaceList.find((w) => w.id === id);
   //   if (selected) navigate("/ExportWorkspace", { state: selected.originalPayload });
@@ -273,8 +266,6 @@ const Dashboard = () => {
   };
 
   const styleTable = "border-l border-t border-black px-[6px] py-[3px] align-middle";
-
-  // border-t border-l border-black px-[6px] py-[3px]
 
   return (
     <>
@@ -562,3 +553,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
