@@ -203,7 +203,6 @@ const ViewWorkspace = () => {
     
   const closeModalExport = () => {
     setShowExportModal(false);
-    navigate("/Dashboard");
   };
 
   const inputStyle =
