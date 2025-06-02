@@ -281,11 +281,9 @@ const AudioVideoTranscription = () => {
 
       {isLoading && (
         <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
-          {/* Ganti ini dengan komponen/icon loading kamu */}
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
             <p className="text-[24px] font-[600] pb-[16px]">Transcribing Audio...</p>
             <div className="w-[48px] h-[48px] mx-auto">
-              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
               <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
             </div>
           </div>
@@ -294,11 +292,9 @@ const AudioVideoTranscription = () => {
 
       {isLoadingSum && (
         <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
-          {/* Ganti ini dengan komponen/icon loading kamu */}
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
             <p className="text-[24px] font-[600] pb-[16px]">Summarizing Transcript...</p>
             <div className="w-[48px] h-[48px] mx-auto">
-              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
               <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
             </div>
           </div>
