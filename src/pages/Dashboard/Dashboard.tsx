@@ -15,6 +15,7 @@ const Dashboard = () => {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [endDateError, setEndDateError] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [viewFilter, setViewFilter] = useState("All");
 
@@ -217,6 +218,7 @@ const Dashboard = () => {
     setTypeFilter("All");
     setViewFilter("All");
     fetchWorkspaceData();
+    setEndDateError("");
   };
 
   const styleTable = "border-l border-t border-black px-[6px] py-[3px] align-middle";
@@ -348,9 +350,21 @@ const Dashboard = () => {
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(e) => {
+                    const selectedEndDate = new Date(e.target.value)
+                    const selectedStartDate = new Date(startDate)
+
+                    if (selectedEndDate < selectedStartDate){
+                      setEndDateError("End Date tidak boleh lebih kecil dari Start Date");
+                      setEndDate('');
+                    }else{
+                      setEndDate(e.target.value);
+                      setEndDateError("");
+                    }
+                  }}
                   className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
+                {endDateError && <p className="text-dark_red mt-[4px]">{endDateError}</p>}
               </div>
             </div>
 
