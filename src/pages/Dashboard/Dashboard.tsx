@@ -415,7 +415,7 @@ const Dashboard = () => {
                     const selectedStartDate = new Date(startDate)
 
                     if (selectedEndDate < selectedStartDate){
-                      setEndDateError("End Date tidak boleh lebih kecil dari Start Date");
+                      setEndDateError("End Date cannot be earlier than Start Date");
                       setEndDate('');
                     }else{
                       setEndDate(e.target.value);

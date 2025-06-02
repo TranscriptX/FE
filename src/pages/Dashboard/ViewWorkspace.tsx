@@ -20,6 +20,8 @@ const ViewWorkspace = () => {
   const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
   const [workspaceList, setWorkspaceList] = useState<any[]>([]);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [showStopShareModal, setShowStopShareModal] = useState(false);
+  const [shared, setShared] = useState(true);
 
   const [loadingExport, setLoadingExport] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -69,6 +71,26 @@ const ViewWorkspace = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ workspaceID, isGrantAccess: true }),
+      });
+      if (!res.ok) throw new Error("Failed to share workspace");
+      const data = await res.json();
+      return data.payload?.link || null;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  };
+
+  const stopShareWorkspace = async (workspaceID: string) => {
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID, isGrantAccess: false }),
       });
       if (!res.ok) throw new Error("Failed to share workspace");
       const data = await res.json();
@@ -205,6 +227,36 @@ const ViewWorkspace = () => {
     setShowExportModal(false);
   };
 
+  const stopSharingWorkspace = async () => {
+    setShared(false);
+    return true;
+  };
+
+  const confirmStopShare = async () => {
+    const success = await stopSharingWorkspace();
+    if (success) {
+      setShowStopShareModal(false);
+      navigate("/dashboard");
+    } else {
+      alert("Failed to stop sharing workspace. Please try again.");
+    }
+  };
+
+  const handleStopShare = async (workspaceId: string) => {
+    const link = await stopShareWorkspace(workspaceId);
+    if (link){
+        const updated = workspaceList.map((w) => 
+        w.id === id ? {...w, sharedLink: link } : w
+      );
+      setWorkspaceList(updated);
+      setWorkspaceData((prevWorkspaceData: any) => ({
+        ...prevWorkspaceData,
+        sharedLink: link
+      }));  
+    }
+    setShowStopShareModal(true);
+  }
+
   const inputStyle =
     "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
   const textStyle = "block text-black font-[600]";
@@ -292,6 +344,31 @@ const ViewWorkspace = () => {
             >
               OK
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Stop Share Modal */}
+      {showStopShareModal && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl max-w-[400px] font-bold mb-0">Are you sure you want to stop sharing?</h2>
+            <p>____________________________________________</p>
+            <div className="flex justify-end space-x-[8px] mb-[8px]">
+              <button
+                onClick={closeModal}
+                className="bg-color_secondary text-black font-bold px-[12px] py-[4px] rounded-[4px] border-grey hover:bg-dark_grey cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmStopShare}
+                className="bg-[red] text-white font-bold px-[12px] py-[4px] rounded-[4px] border-[red] hover:bg-darker_red hover:border-darker_red cursor-pointer"
+              >
+                Stop Share
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -434,12 +511,24 @@ const ViewWorkspace = () => {
           )}
 
           <div className="flex justify-end space-x-[12px]">
-            <button
-              className="bg-ijo text-white font-bold px-[24px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover hover:border-ijoHover cursor-pointer"
-              onClick={() => handleShare(id || "Null")}
-            >
-              Share
-            </button>
+            {workspaceData?.sharedLink && shared ?
+              <button
+                onClick={() => handleStopShare(id || "Null")}
+                className="bg-jingga text-white font-bold px-[24px] py-[6px] rounded-[4px] border-jingga hover:bg-jingga_hover hover:border-jingga_hover cursor-pointer"
+              >
+                Stop Share
+              </button>
+              :
+              <button
+                className="bg-ijo text-white font-bold px-[24px] py-[4px] rounded-[4px] border-ijo hover:bg-ijoHover hover:border-ijoHover cursor-pointer"
+                onClick={() => handleShare(id || "Null")}
+              >
+                Share
+              </button> 
+            }
+
+
+            
             <button
               className="bg-minty text-white font-bold px-[24px] py-[4px] rounded-[4px] border-minty hover:bg-minty_dark hover:border-minty_dark cursor-pointer"
               onClick={() => handleExport(id || "Null")}
