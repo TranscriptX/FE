@@ -21,6 +21,9 @@ const ViewWorkspace = () => {
   const [workspaceList, setWorkspaceList] = useState<any[]>([]);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
+  const [loadingExport, setLoadingExport] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+
   // Ambil token dan userID dari localStorage/helper
   const token = localStorage.getItem("token");
   const userID = token ? getUserIdFromToken(token) : null;
@@ -161,6 +164,50 @@ const ViewWorkspace = () => {
     }
   };
 
+  const handleExport = async (workspaceID: string) => {
+    if (!token) {
+      alert("Missing token or workspace data");
+      return;
+    }
+    setLoadingExport(true);
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/export`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID }),
+      });
+  
+      if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
+      
+      // Respone adalah file PDF binary
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      // Download file PDF dengan nama workspace_title.pdf
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${workspaceData?.title || "Untitled"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+  
+      setShowExportModal(true);
+        } catch (error) {
+          alert("Failed to export workspace: " + (error as Error).message);
+        } finally {
+          setLoadingExport(false);
+        }
+    };
+    
+  const closeModalExport = () => {
+    setShowExportModal(false);
+    navigate("/Dashboard");
+  };
+
   // Styling classes (sama dengan yang kamu berikan)
   const inputStyle =
     "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
@@ -202,6 +249,24 @@ const ViewWorkspace = () => {
   return (
     <>
       <Navbar currentPage="Dashboard" />
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
+            <img src={checkSign} alt="check" className="size-[96px]" />
+            <p>____________________________________________</p>
+            <button
+              onClick={closeModalExport}
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Share Modal */}
       {showShareModal && (
@@ -381,7 +446,8 @@ const ViewWorkspace = () => {
             </button>
             <button
               className="bg-minty text-white font-bold px-[24px] py-[4px] rounded-[4px] border-minty hover:bg-minty_dark hover:border-minty_dark cursor-pointer"
-              onClick={() => navigate("/ExportWorkspace", { state: workspaceData })}
+              onClick={() => handleExport(id || "Null")}
+              disabled={loadingExport}
             >
               Export
             </button>

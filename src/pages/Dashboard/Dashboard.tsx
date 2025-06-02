@@ -25,6 +25,9 @@ const Dashboard = () => {
   const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
   const [sharedLinkToShow, setSharedLinkToShow] = useState<string>("");
 
+  const [loadingExport, setLoadingExport] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -202,9 +205,57 @@ const Dashboard = () => {
     navigate(`/edit-workspace/${id}`);
   };
 
-  const handleExport = (id: string) => {
-    const selected = workspaceList.find((w) => w.id === id);
-    if (selected) navigate("/ExportWorkspace", { state: selected.originalPayload });
+  // const handleExport = (id: string) => {
+  //   const selected = workspaceList.find((w) => w.id === id);
+  //   if (selected) navigate("/ExportWorkspace", { state: selected.originalPayload });
+  // };
+
+  const handleExport = async (workspaceID: string) => {
+    if (!token) {
+      alert("Missing token or workspace data");
+      return;
+    }
+    setLoadingExport(true);
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/export`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID }),
+      });
+  
+      if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
+      var title;
+      const selected = workspaceList.find((w) => w.id === workspaceID);
+      if (selected) {
+        title = selected.title;
+      }
+      
+      // Respone adalah file PDF binary
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      // Download file PDF dengan nama workspace_title.pdf
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title || "workspace"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+  
+      setShowExportModal(true);
+        } catch (error) {
+          alert("Failed to export workspace: " + (error as Error).message);
+        } finally {
+          setLoadingExport(false);
+        }
+    };
+    
+  const closeModal = () => {
+    setShowExportModal(false);
   };
 
   // Filtering
@@ -241,7 +292,7 @@ const Dashboard = () => {
               <textarea
                 value={sharedLinkToShow}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
+                className="w-[300px] p-3 border-grey rounded-md text-justify mb-4 resize-none"
                 rows={1}
               />
 
@@ -325,6 +376,24 @@ const Dashboard = () => {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
+            <img src={checkSign} alt="check" className="size-[96px]" />
+            <p>____________________________________________</p>
+            <button
+              onClick={closeModal}
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
@@ -468,6 +537,7 @@ const Dashboard = () => {
                           onClick={() => handleExport(w.id)}
                           className="text-black bg-biru_muda border-none rounded-[4px] cursor-pointer py-[4px]"
                           title="Export"
+                          disabled={loadingExport}
                         >
                           <FaDownload />
                         </button>
