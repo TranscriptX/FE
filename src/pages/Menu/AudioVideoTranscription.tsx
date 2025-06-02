@@ -25,7 +25,7 @@ const AudioVideoTranscription = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSum, setIsLoadingSum] = useState(false);
 
-  const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none";
+  const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none resize-none";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -254,7 +254,7 @@ const AudioVideoTranscription = () => {
               <textarea
                 value={sharedLink}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
+                className="w-[300px] p-3 border-grey rounded-md text-justify mb-4 resize-none"
                 rows={1}
               />
               <button
@@ -281,11 +281,9 @@ const AudioVideoTranscription = () => {
 
       {isLoading && (
         <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
-          {/* Ganti ini dengan komponen/icon loading kamu */}
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
             <p className="text-[24px] font-[600] pb-[16px]">Transcribing Audio...</p>
             <div className="w-[48px] h-[48px] mx-auto">
-              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
               <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
             </div>
           </div>
@@ -294,11 +292,9 @@ const AudioVideoTranscription = () => {
 
       {isLoadingSum && (
         <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
-          {/* Ganti ini dengan komponen/icon loading kamu */}
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
             <p className="text-[24px] font-[600] pb-[16px]">Summarizing Transcript...</p>
             <div className="w-[48px] h-[48px] mx-auto">
-              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
               <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
             </div>
           </div>

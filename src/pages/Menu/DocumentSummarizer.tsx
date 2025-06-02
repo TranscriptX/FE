@@ -24,7 +24,7 @@ const DocumentSummarizer = () => {
   const [sharedLink, setSharedLink] = useState(""); // To store the generated link
 
   const inputStyle =
-    "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none";
+    "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none resize-none";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -101,7 +101,7 @@ const DocumentSummarizer = () => {
         const data = await response.json();
         console.log("API response payload:", data.payload);
         setSummaryResult(data.payload.result);
-        setWorkspaceID(data.payload.workspaceID); // Save workspaceID from response
+        setWorkspaceID(data.payload.workspaceID); 
         setIsSummarized(true);
       } else {
         const errorData = await response.json();
@@ -194,7 +194,7 @@ const DocumentSummarizer = () => {
               <textarea
                 value={sharedLink}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
+                className="w-[300px] p-3 border-grey rounded-md text-justify mb-4 resize-none"
                 rows={1}
               />
               <button
@@ -221,11 +221,9 @@ const DocumentSummarizer = () => {
 
       {isLoading && (
         <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
-          {/* Ganti ini dengan komponen/icon loading kamu */}
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
             <p className="text-[24px] font-[600] pb-[16px]">Summarizing Document...</p>
             <div className="w-[48px] h-[48px] mx-auto">
-              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
               <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
             </div>
           </div>

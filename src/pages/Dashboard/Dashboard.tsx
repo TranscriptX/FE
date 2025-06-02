@@ -15,6 +15,7 @@ const Dashboard = () => {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [endDateError, setEndDateError] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [viewFilter, setViewFilter] = useState("All");
 
@@ -23,6 +24,9 @@ const Dashboard = () => {
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
   const [sharedLinkToShow, setSharedLinkToShow] = useState<string>("");
+
+  const [loadingExport, setLoadingExport] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -194,12 +198,57 @@ const Dashboard = () => {
   const handleEditWorkspace = (id: string) => {
     navigate(`/edit-workspace/${id}`);
   };
+  // const handleExport = (id: string) => {
+  //   const selected = workspaceList.find((w) => w.id === id);
+  //   if (selected) navigate("/ExportWorkspace", { state: selected.originalPayload });
+  // };
 
-  const handleExport = (id: string) => {
-    const selected = workspaceList.find((w) => w.id === id);
-    if (selected) {
-      navigate("/ExportWorkspace", { state: { ...selected.originalPayload, workspaceID: selected.id } });
+  const handleExport = async (workspaceID: string) => {
+    if (!token) {
+      alert("Missing token or workspace data");
+      return;
     }
+    setLoadingExport(true);
+    try {
+      const res = await fetch(`${API_PATH}/api/workspaces/export`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workspaceID }),
+      });
+  
+      if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
+      var title;
+      const selected = workspaceList.find((w) => w.id === workspaceID);
+      if (selected) {
+        title = selected.title;
+      }
+      
+      // Respone adalah file PDF binary
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      // Download file PDF dengan nama workspace_title.pdf
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title || "workspace"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+  
+      setShowExportModal(true);
+        } catch (error) {
+          alert("Failed to export workspace: " + (error as Error).message);
+        } finally {
+          setLoadingExport(false);
+        }
+    };
+    
+  const closeModal = () => {
+    setShowExportModal(false);
   };
 
   // Filtering
@@ -213,6 +262,7 @@ const Dashboard = () => {
     setTypeFilter("All");
     setViewFilter("All");
     fetchWorkspaceData();
+    setEndDateError("");
   };
 
   const styleTable = "border-l border-t border-black px-[6px] py-[3px] align-middle";
@@ -233,7 +283,7 @@ const Dashboard = () => {
               <textarea
                 value={sharedLinkToShow}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
+                className="w-[300px] p-3 border-grey rounded-md text-justify mb-4 resize-none"
                 rows={1}
               />
 
@@ -321,6 +371,24 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
+            <img src={checkSign} alt="check" className="size-[96px]" />
+            <p>____________________________________________</p>
+            <button
+              onClick={closeModal}
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="bg-white min-h-screen flex flex-col justify-start">
         <h1 className="text-[48px] text-center font-bold mb-[60px] mt-[100px]">Dashboard</h1>
@@ -342,9 +410,21 @@ const Dashboard = () => {
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(e) => {
+                    const selectedEndDate = new Date(e.target.value)
+                    const selectedStartDate = new Date(startDate)
+
+                    if (selectedEndDate < selectedStartDate){
+                      setEndDateError("End Date tidak boleh lebih kecil dari Start Date");
+                      setEndDate('');
+                    }else{
+                      setEndDate(e.target.value);
+                      setEndDateError("");
+                    }
+                  }}
                   className="p-[4px] border border-dark_grey rounded-md font-sans"
                 />
+                {endDateError && <p className="text-dark_red mt-[4px]">{endDateError}</p>}
               </div>
             </div>
 
@@ -448,6 +528,7 @@ const Dashboard = () => {
                           onClick={() => handleExport(w.id)}
                           className="text-black bg-biru_muda border-none rounded-[4px] cursor-pointer py-[4px]"
                           title="Export"
+                          disabled={loadingExport}
                         >
                           <FaDownload />
                         </button>
