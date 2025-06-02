@@ -100,9 +100,9 @@ const Navbar = (props: NavbarType) => {
                             <img src={profileIcon} className="size-[51px]" />  
                         </div>
                         <div className="flex-row">
-                            <div className="font-bold text-[16px]">{userName}</div>
-                            <a href="/profile" className="text-black no-underline hover:underline hover:text-biru mt-[10px] space-x-[4px] text-[10px] mr-[4px]">Edit My Profile</a>
-                            <span>|</span>
+                            <div className="font-bold text-[16px] ml-[8px]">{userName}</div>
+                            <a href="/profile" className="text-black no-underline hover:underline hover:text-biru mt-[10px] space-x-[4px] text-[10px] mr-[4px]"></a>
+                            {/* <span>|</span> */}
                             <button onClick={logout} className="text-biru text-sm hover:underline border-none bg-grey cursor-pointer no-underline text-[10px] ">  
                                 Logout
                             </button>    
