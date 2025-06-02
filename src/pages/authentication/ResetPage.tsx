@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 import checkSign from "../../assets/check-sign.svg";
@@ -14,7 +14,6 @@ const ResetPage = () => {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
-    const [success, setSuccess] = useState(false);
 
     const inputStyle = "w-[400px] px-[4px] py-[16px] mt-[8px] mb-[20px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
@@ -54,23 +53,6 @@ const ResetPage = () => {
     return (
         <>
             <Navbar currentPage="Reset" />
-
-            {/* Testing
-            {process.env.NODE_ENV === "development" && (
-                <button
-                    onClick={() => {
-                        if (!newPassword && !confirmPassword) {
-                            setError("Please enter a password first.");
-                            return;
-                        }
-                        setError("");
-                        setShowModal(true);
-                    }}
-                    className="absolute top-[100px] left-[50px] bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-all"
-                >
-                    Simulate Success (Dev)
-                </button>
-            )} */}
 
             <div className="min-h-screen flex justify-center items-center bg-white">
                 <div className="z-10 bg-color_secondary w-full max-w-[500px] min-h-[450px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">

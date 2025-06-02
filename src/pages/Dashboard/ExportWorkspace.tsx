@@ -19,7 +19,6 @@ const handleExport = async () => {
     alert("Missing authentication token");
     return;
   }
-
   
     const workspaceID = workspaceData?.workspaceID || workspaceData?.id;
 
@@ -30,6 +29,7 @@ const handleExport = async () => {
 
     setLoadingExport(true);
     try {
+      const workspaceID = workspaceData.workspaceID || workspaceData.id;
       const res = await fetch(`${API_PATH}/api/workspaces/export`, {
         method: "POST",
         headers: {
@@ -37,10 +37,7 @@ const handleExport = async () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ workspaceID }),
-      });
-    
-
-      
+      });  
 
       if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
 

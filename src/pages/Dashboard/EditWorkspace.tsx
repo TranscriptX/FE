@@ -123,7 +123,7 @@ const EditWorkspace = () => {
   };
 
   const handleSubmit = () => setShowSubmitModal(true);
-  const handleStopShare = () => setShowStopShareModal(true);
+  // const handleStopShare = () => setShowStopShareModal(true);
 
   const inputStyle =
     "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
@@ -186,7 +186,7 @@ const EditWorkspace = () => {
       {/* Main Form */}
       <div className="bg-white min-h-screen flex flex-col justify-start items-center">
         <h1 className="text-3xl font-bold text-center mt-[100px]">EDIT WORKSPACE</h1>
-        <div className="bg-white p-[60px] w-full max-w-[1000px]">
+        <div className="bg-white p-[60px] w-full max-w-[480px]">
           <div className="grid grid-cols-2 gap-[24px] mb-6">
             <div>
               <label className="block text-black font-[600]">Title</label>
@@ -197,24 +197,24 @@ const EditWorkspace = () => {
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-black font-[600]">Shared</label>
-              <input
-                className={inputStyle}
-                type="checkbox"
-                checked={shared}
-                onChange={(e) => setShared(e.target.checked)}
-              />
-            </div>
           </div>
           <div>
-            <label className="block text-black font-[600]">Description</label>
+            <label className="block text-black font-[600] mt-[8px]">Description</label>
             <textarea
               className="font-sans w-full px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none"
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+          </div>
+          <div className="flex items-center mt-[8px]">
+            <input
+              className="size-[24px]"
+              type="checkbox"
+              checked={shared}
+              onChange={(e) => setShared(e.target.checked)}
+            />
+            <label className="text-black pl-[8px] ">Share this workspace</label>
           </div>
           <div className="flex flex-col items-end space-y-[8px] mt-[16px]">
             <div className="flex space-x-[8px]">
@@ -231,12 +231,12 @@ const EditWorkspace = () => {
                 Submit
               </button>
             </div>
-            <button
+            {/* <button
               onClick={handleStopShare}
               className="bg-jingga text-white font-bold px-[20px] py-[6px] rounded-[4px] border-jingga hover:bg-jingga_hover hover:border-jingga_hover cursor-pointer"
             >
               Stop Share
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

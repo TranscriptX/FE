@@ -51,6 +51,14 @@
 
     --font-style-&: initial;
     --font-sans: 'IBM Plex Sans', "sans-serif";
+
+    --animate-spin: spin 1s ease-in-out infinite;
+
+    @keyframes spin{
+        0%{
+            transform: rotate(-360deg);
+        }
+    }
 }
 
 

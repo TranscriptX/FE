@@ -20,9 +20,9 @@ function App() {
 		<AuthProvider>
 			<BrowserRouter>
 				<Routes>
-					<Route path="login" element={<LoginPage />} />
-					<Route path="register" element={<RegisterPage />} />
-					<Route path="forgot" element={<ForgotPage />} />
+					<Route path="/login" element={<LoginPage />} />
+					<Route path="/register" element={<RegisterPage />} />
+					<Route path="/forgot" element={<ForgotPage />} />
 					<Route path="/" element={<LandingPage />} />
 					<Route path="/Tools" element={<Tools />} />
 					<Route path="/document-summarizer" element={<DocumentSummarizer />} />

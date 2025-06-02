@@ -79,15 +79,15 @@ const ViewWorkspace = () => {
   // Modal handlers
   const handleShare = async (workspaceId: string) => {
     const link = await shareWorkspace(workspaceId);
-    if (link) {
-      const updated = workspaceList.map((w) =>
-        w.id === id ? { ...w, sharedLink: link } : w
+    if (link){
+        const updated = workspaceList.map((w) => 
+        w.id === id ? {...w, sharedLink: link } : w
       );
       setWorkspaceList(updated);
       setWorkspaceData((prevWorkspaceData: any) => ({
         ...prevWorkspaceData,
-        sharedLink: link,
-      }));
+        sharedLink: link
+      }));  
     }
     setShowShareModal(true);
   };
@@ -104,23 +104,24 @@ const ViewWorkspace = () => {
 
   const deleteWorkspace = async (id: string[]) => {
     if (!token || !userID) return false;
-    try {
-      const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workspaceID: id, userID }),
-      });
-
-      if (!res.ok) throw new Error("Failed to delete workspace");
-      return true;
-    } catch (err) {
-      console.error(err);
-      return false;
-    }
-  };
+      try {
+        const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ workspaceID: id, userID }),
+        });
+  
+        // Accept any 2xx success response
+        if (!res.ok) throw new Error("Failed to delete workspace");
+        return true;
+      } catch (err) {
+        console.error(err);
+        return false;
+      }
+    };
 
   const handleDelete = (workspaceId: string | undefined) => {
     if (!workspaceId) return;

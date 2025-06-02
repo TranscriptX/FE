@@ -43,6 +43,14 @@ const LoginPage = () => {
         }
     };
 
+    const handleRegister = async () => {
+        navigate("/register");
+    }
+
+    const handleForgot = async () => {
+        navigate("/forgot")
+    }
+
     const inputStyle = "w-[400px] px-[4px] py-[16px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-color_secondary rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
     return (
@@ -79,7 +87,7 @@ const LoginPage = () => {
                                 className={inputStyle}
                             />
 
-                            <a href="/forgot" className="text-biru no-underline hover:underline text-[16px] mt-[8px] mr-[280px]">
+                            <a onClick={handleForgot} className="text-biru no-underline hover:underline text-[16px] mt-[8px] mr-[280px] cursor-pointer">
                                 Forgot Password?
                             </a>
 
@@ -99,7 +107,7 @@ const LoginPage = () => {
 
                     <p className="text-center text-sm mt-4">
                     Don't have an account?{" "}
-                        <a href="/register" className="text-biru no-underline hover:underline">
+                        <a onClick={handleRegister} className="text-biru no-underline hover:underline cursor-pointer">
                             Create one
                         </a>
                     </p>

@@ -72,17 +72,20 @@ const Dashboard = () => {
 
       if (data.statusCode !== 200) throw new Error(data.message || "Failed to fetch");
 
+      // Map response to format yang dipakai UI
       const list = data.payload
-        .sort((a: any, b: any) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
-        .map((item: any) => ({
-          id: item.workspaceID,
-          date: item.createdDate.split("T")[0],
-          title: item.title,
-          description: item.description,
-          type: item.type,
-          sharedLink: item.link || "-",
-          originalPayload: item,
-        }));
+      .sort((a: any, b: any) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
+      .map((item: any) => ({
+        id: item.workspaceID,
+        date: item.createdDate.split("T")[0],
+        title: item.title,
+        description: item.description,
+        type: item.type,
+        sharedLink: item.link || "-",
+        originalPayload: item,
+      }));
+
+      // console.log("Workspaces to render in table:", list);
 
       setWorkspaceList(list);
       // setOriginalList(list);
@@ -100,7 +103,7 @@ const Dashboard = () => {
 
   // Delete workspace API (multiple IDs possible)
   const deleteWorkspace = async (workspaceIDs: string[]) => {
-    if (!token || !userID) return false;
+  if (!token || !userID) return false;
     try {
       const res = await fetch(`${API_PATH}/api/workspaces/delete`, {
         method: "POST",
@@ -411,57 +414,15 @@ const Dashboard = () => {
                 </thead>
                 <tbody>
                   {workspaceList.map((w, index) => (
-                    <tr
-                      key={w.id}
-                      className={`${index % 2 === 0 ? "bg-white" : "bg-color_secondary"}`}
-                    >
-                      <td
-                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
-                          index === workspaceList.length - 1 ? "border-b border-black" : ""
-                        }`}
-                      >
-                        {index + 1}
-                      </td>
-                      <td
-                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
-                          index === workspaceList.length - 1 ? "border-b border-black" : ""
-                        }`}
-                      >
-                        {w.date}
-                      </td>
-                      <td
-                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
-                          index === workspaceList.length - 1 ? "border-b border-black" : ""
-                        }`}
-                      >
-                        {w.title}
-                      </td>
-                      <td
-                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
-                          index === workspaceList.length - 1 ? "border-b border-black" : ""
-                        }`}
-                      >
-                        {w.description}
-                      </td>
-                      <td
-                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
-                          index === workspaceList.length - 1 ? "border-b border-black" : ""
-                        }`}
-                      >
-                        {w.type}
-                      </td>
-                      <td
-                        className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${
-                          index === workspaceList.length - 1 ? "border-b border-black" : ""
-                        }`}
-                      >
-                        {w.sharedLink || "-"}
-                      </td>
-                      <td
-                        className={`border-l border-r border-t border-black px-[6px] py-[5px] flex flex-row h-[90px] justify-center items-center space-x-[4px] ${
-                          index === workspaceList.length - 1 ? "border-b border-black" : ""
-                        }`}
-                      >
+                    <tr key={w.id} className={
+                      `${index % 2 === 0 ? "bg-white" : "bg-color_secondary"}`}>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{index + 1}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.date}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.title}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.description}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.type}</td>
+                      <td className={`border-l border-t border-black px-[6px] py-[3px] align-middle ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>{w.sharedLink || "-"}</td>
+                      <td className={`border-l border-r border-t border-black px-[6px] py-[5px] flex flex-row h-[90px] justify-center items-center space-x-[4px] ${index === workspaceList.length - 1 ? "border-b border-black" : ""}`}>
                         <button
                           onClick={() => handleViewWorkspace(w.id)}
                           className="text-black bg-ijo border-none rounded-[4px] cursor-pointer py-[4px]"

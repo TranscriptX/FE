@@ -76,7 +76,8 @@ const RegisterPage = () => {
                     password: "",
                     confirmPassword: "",
                 });
-            }else if (result.message === "Email already registered") {
+            }
+            else if (result.message === "Email already registered") {
                 setError("An account with this email already exists.");
                 setShowModal(false);
             }
@@ -86,6 +87,10 @@ const RegisterPage = () => {
             setLoading(false);
         }
     };
+
+    const handleLogin = async () => {
+        navigate("/login");
+    }
 
     return (
         <>
@@ -161,7 +166,7 @@ const RegisterPage = () => {
 
                     <p className="text-center text-sm mt-4">
                     Already have an account?{" "}
-                    <a href="/login" className="text-biru no-underline hover:underline">
+                    <a onClick={handleLogin} className="text-biru no-underline hover:underline cursor-pointer">
                         Log in
                     </a>
                     </p>

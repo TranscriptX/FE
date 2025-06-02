@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Copy from "../../assets/copy.svg";
 import API_PATH from "../../api/API_PATH"; 
 import { getUserIdFromToken } from "../../utils/Helper";
+import Loading from "../../assets/loading.svg";
 
 const WORKSPACE_SHARE_ENDPOINT = `${API_PATH}/api/workspaces/share`;
 
@@ -21,6 +22,8 @@ const AudioVideoTranscription = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharedLink, setSharedLink] = useState("");  
   const [workspaceID, setWorkspaceID] = useState<string | null>(null); // To store dynamic workspaceID
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSum, setIsLoadingSum] = useState(false);
 
   const inputStyle = "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none";
 
@@ -51,15 +54,19 @@ const AudioVideoTranscription = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          alert("User not authenticated.");
+          alert("Authorization token not found. Please log in.");
+          navigate("/login");
           return;
         }
 
         const userID = getUserIdFromToken(token);
         if (!userID) {
-          alert("Invalid token. Cannot extract user ID.");
+          alert("Invalid token. Please log in again.");
+          navigate("/login");
           return;
         }
+
+        setIsLoading(true);
 
         const fileBase64 = await convertFileToBase64(file);
 
@@ -91,6 +98,8 @@ const AudioVideoTranscription = () => {
       } catch (error) {
         console.error("Error:", error);
         alert("An error occurred while transcribing the audio/video.");
+      } finally{
+        setIsLoading(false);
       }
     }
   };
@@ -100,14 +109,18 @@ const AudioVideoTranscription = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("Authorization token not found. Please log in.");
+      navigate("/login");
       return;
     }
 
     const userID = getUserIdFromToken(token);
     if (!userID) {
       alert("Invalid token. Please log in again.");
+      navigate("/login");
       return;
     }
+
+    setIsLoadingSum(true);
 
     try {
       let fileBase64: string | null = null;
@@ -119,6 +132,7 @@ const AudioVideoTranscription = () => {
 
       if (!fileBase64 && !workspaceID) {
         alert("Please upload a file or use an existing transcription to summarize.");
+        setIsLoadingSum(false);
         return;
       }
 
@@ -156,10 +170,15 @@ const AudioVideoTranscription = () => {
       } else {
         const errorData = await response.json();
         alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
+        if (errorData.message === "Invalid or expired token. Please login."){
+          navigate("/login");
+        }
       }
     } catch (error) {
       console.error("Error during summarization:", error);
       alert("An error occurred while summarizing.");
+    } finally{
+      setIsLoadingSum(false);
     }
   };
 
@@ -169,6 +188,7 @@ const AudioVideoTranscription = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         alert("User not authenticated.");
+        navigate("/login");
         return;
       }
 
@@ -234,7 +254,7 @@ const AudioVideoTranscription = () => {
               <textarea
                 value={sharedLink}
                 readOnly
-                className="w-[300px] p-3 border-grey rounded-md text-center mb-4"
+                className="w-[300px] p-3 border-grey rounded-md text-center mb-4 resize-none"
                 rows={1}
               />
               <button
@@ -259,6 +279,32 @@ const AudioVideoTranscription = () => {
         </div>
       )}
 
+      {isLoading && (
+        <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
+          {/* Ganti ini dengan komponen/icon loading kamu */}
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
+            <p className="text-[24px] font-[600] pb-[16px]">Transcribing Audio...</p>
+            <div className="w-[48px] h-[48px] mx-auto">
+              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
+              <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isLoadingSum && (
+        <div className="min-w-screen min-h-screen fixed inset-0 bg-white opacity-75 z-50 flex justify-center items-center">
+          {/* Ganti ini dengan komponen/icon loading kamu */}
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-center items-center">
+            <p className="text-[24px] font-[600] pb-[16px]">Summarizing Transcript...</p>
+            <div className="w-[48px] h-[48px] mx-auto">
+              {/* Nanti ganti dengan ikon/spinner sesungguhnya */}
+              <img src={Loading} alt="Loading..." className="animate-spin size-[32px]" />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white min-h-screen flex justify-center items-center">
         <div className="bg-white p-[60px] rounded-lg shadow-lg w-full max-w-[450px]">
           <h1 className="text-[36px] font-bold text-center mb-auto">Audio/Video Transcription</h1>
@@ -272,6 +318,7 @@ const AudioVideoTranscription = () => {
             <input
               placeholder="Upload Document"
               type="file"
+              disabled={isLoading}
               onChange={handleFileChange}
               accept="audio/*,video/*"
               className="w-full text-darker_grey text-[18px] bg-color_secondary border-2 border-dark_grey rounded-[5px] p-[20px] cursor-pointer shadow-[0_1px_4px_rgba(0,0,0,0.25)] hover:border-dark_grey hover:ring-2 hover:ring-dark_grey focus:ring-2 focus:ring-dark_grey"
@@ -286,6 +333,7 @@ const AudioVideoTranscription = () => {
               <label className="block text-black font-[600] mb-2">Workspace Title</label>
               <input
                 type="text"
+                disabled={isTranscribed || isLoading || isSummarized}
                 placeholder="Enter workspace title"
                 value={workspaceTitle}
                 onChange={(e) => setWorkspaceTitle(e.target.value)}
@@ -297,6 +345,7 @@ const AudioVideoTranscription = () => {
               <label className="block text-black font-[600] mb-2">Workspace Description</label>
               <textarea
                 placeholder="Enter workspace description"
+                disabled={isTranscribed || isLoading || isSummarized}
                 value={workspaceDescription}
                 onChange={(e) => setWorkspaceDescription(e.target.value)}
                 className={inputStyle}
@@ -309,7 +358,7 @@ const AudioVideoTranscription = () => {
             {!isTranscribed && (
               <button
                 onClick={handleTranscribe}
-                disabled={!file}
+                disabled={isLoading || !file}
                 className={`py-[8px] px-[24px] mt-[10px] ${!file ? 'bg-color_secondary' : 'bg-pinky text-white hover:ring-1 hover:ring-light_pinky cursor-pointer border-light_pinky'} rounded-[5px] shadow-[0_1px_2px_rgba(240,114,174,0.25)] transition-all duration-400 ease-in-out`}
               >
                 Transcribe
@@ -332,6 +381,7 @@ const AudioVideoTranscription = () => {
                   <div className="flex justify-end mb-[12px]">
                     <button
                       onClick={handleSummarize}
+                      disabled={isLoading}
                       className="py-[8px] px-[24px] mt-[20px] bg-biru_muda text-white hover:ring-1 hover:ring-biru_muda cursor-pointer border-biru_muda rounded-[5px] shadow-[0_1px_5px_rgba(50,173,230,0.25)] transition-all duration-400 ease-in-out"
                     >
                       Summarize
@@ -354,12 +404,15 @@ const AudioVideoTranscription = () => {
                 <div className="mt-4 flex space-x-[12px] justify-end">
                   <button
                     onClick={handleShare}
+                    disabled={isLoading}
                     className="py-[8px] px-[24px] mt-[10px] bg-ijo text-white hover:ring-1 hover:ring-ijo cursor-pointer border-ijo rounded-[5px] shadow-[0_1px_5px_rgba(52,199,89,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Share
                   </button>
 
-                  <button onClick={handleExport}
+                  <button 
+                    onClick={handleExport}
+                    disabled={isLoading}
                     className="py-[8px] px-[24px] mt-[10px] bg-minty text-white hover:ring-1 hover:ring-minty cursor-pointer border-minty rounded-[5px] shadow-[0_1px_2px_rgba(0,199,190,0.25)] transition-all duration-400 ease-in-out">
                     Export  
                   </button>
