@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
@@ -14,6 +14,18 @@ const LoginPage = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const authContext = useContext(AuthContext)
+    const [noLogin, setNoLogin] = useState(false);
+
+    const token = localStorage.getItem("token");
+
+    useEffect(() => {
+        if (!token){
+            setNoLogin(false);
+        }else{
+            setNoLogin(true);
+        }    
+    })
+    
 
     const handleLogin = async() => {
         setError("");
@@ -56,7 +68,7 @@ const LoginPage = () => {
     return (
         <>
             <Navbar currentPage="Login"/>
-            <div className="min-h-screen flex flex-row items-center justify-center bg-white">
+            {!noLogin && <div className="min-h-screen flex flex-row items-center justify-center bg-white">
                 
                 <div className="z-10 bg-color_secondary w-full max-w-[500px] min-h-[500px] flex flex-col align-items justify-content shadow-[0_5px_5px_rgba(0,0,0,0.25)]">
                     <h1 className="text-2xl font-bold text-center mb-[40px] mt-[50px]">Login</h1>
@@ -117,6 +129,12 @@ const LoginPage = () => {
                     <ExpandingCardLogin/>   
                 </div>
             </div>
+            }
+            {noLogin && 
+            <div className="flex flex-row h-screen items-center justify-center">
+                <p>Please go back.</p>
+            </div>
+            }
         </>
     );
 

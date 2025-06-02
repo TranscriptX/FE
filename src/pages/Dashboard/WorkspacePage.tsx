@@ -6,7 +6,7 @@ import Copy from "../../assets/copy.svg";
 import API_PATH from "../../api/API_PATH";
 import { getUserIdFromToken } from "../../utils/Helper";
 
-const ViewWorkspace = () => {
+const SeeWorkspace = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
@@ -20,10 +20,10 @@ const ViewWorkspace = () => {
   const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
   const [workspaceList, setWorkspaceList] = useState<any[]>([]);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
-  const [showStopShareModal, setShowStopShareModal] = useState(false);
-  const [shared, setShared] = useState(true);
+//   const [showStopShareModal, setShowStopShareModal] = useState(false);
+//   const [shared, setShared] = useState(true);
 
-  const [loadingExport, setLoadingExport] = useState(false);
+//   const [loadingExport, setLoadingExport] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
 
   // Ambil token dan userID dari localStorage/helper
@@ -61,61 +61,61 @@ const ViewWorkspace = () => {
       ? new Date(workspaceData.createdDate).toLocaleDateString()
       : "-";
 
-  const shareWorkspace = async (workspaceID: string) => {
-    if (!token) return null;
-    try {
-      const res = await fetch(`${API_PATH}/api/workspaces/share`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workspaceID, isGrantAccess: true }),
-      });
-      if (!res.ok) throw new Error("Failed to share workspace");
-      const data = await res.json();
-      return data.payload?.link || null;
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  };
+//   const shareWorkspace = async (workspaceID: string) => {
+//     if (!token) return null;
+//     try {
+//       const res = await fetch(`${API_PATH}/api/workspaces/share`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ workspaceID, isGrantAccess: true }),
+//       });
+//       if (!res.ok) throw new Error("Failed to share workspace");
+//       const data = await res.json();
+//       return data.payload?.link || null;
+//     } catch (err) {
+//       console.error(err);
+//       return null;
+//     }
+//   };
 
-  const stopShareWorkspace = async (workspaceID: string) => {
-    if (!token) return null;
-    try {
-      const res = await fetch(`${API_PATH}/api/workspaces/share`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workspaceID, isGrantAccess: false }),
-      });
-      if (!res.ok) throw new Error("Failed to share workspace");
-      const data = await res.json();
-      return data.payload?.link || null;
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  };
+//   const stopShareWorkspace = async (workspaceID: string) => {
+//     if (!token) return null;
+//     try {
+//       const res = await fetch(`${API_PATH}/api/workspaces/share`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ workspaceID, isGrantAccess: false }),
+//       });
+//       if (!res.ok) throw new Error("Failed to share workspace");
+//       const data = await res.json();
+//       return data.payload?.link || null;
+//     } catch (err) {
+//       console.error(err);
+//       return null;
+//     }
+//   };
 
   // Modal handlers
-  const handleShare = async (workspaceId: string) => {
-    const link = await shareWorkspace(workspaceId);
-    if (link){
-        const updated = workspaceList.map((w) => 
-        w.id === id ? {...w, sharedLink: link } : w
-      );
-      setWorkspaceList(updated);
-      setWorkspaceData((prevWorkspaceData: any) => ({
-        ...prevWorkspaceData,
-        sharedLink: link
-      }));  
-    }
-    setShowShareModal(true);
-  };
+//   const handleShare = async (workspaceId: string) => {
+//     const link = await shareWorkspace(workspaceId);
+//     if (link){
+//         const updated = workspaceList.map((w) => 
+//         w.id === id ? {...w, sharedLink: link } : w
+//       );
+//       setWorkspaceList(updated);
+//       setWorkspaceData((prevWorkspaceData: any) => ({
+//         ...prevWorkspaceData,
+//         sharedLink: link
+//       }));  
+//     }
+//     setShowShareModal(true);
+//   };
 
   const closeModal = () => {
     setShowShareModal(false);
@@ -123,9 +123,9 @@ const ViewWorkspace = () => {
   };
 
   // Edit workspace handler
-  const handleEditWorkspace = (workspaceId: string | undefined) => {
-    navigate(`/edit-workspace/${workspaceId}`);
-  };
+//   const handleEditWorkspace = (workspaceId: string | undefined) => {
+//     navigate(`/edit-workspace/${workspaceId}`);
+//   };
 
   const deleteWorkspace = async (id: string[]) => {
     if (!token || !userID) return false;
@@ -148,12 +148,12 @@ const ViewWorkspace = () => {
       }
     };
 
-  const handleDelete = (workspaceId: string | undefined) => {
-    if (!workspaceId) return;
-    console.log("Clicked delete on workspace ID:", workspaceId);
-    setWorkspaceToDelete(workspaceId);
-    setShowDeleteModal(true);
-  };
+//   const handleDelete = (workspaceId: string | undefined) => {
+//     if (!workspaceId) return;
+//     console.log("Clicked delete on workspace ID:", workspaceId);
+//     setWorkspaceToDelete(workspaceId);
+//     setShowDeleteModal(true);
+//   };
 
   const confirmDelete = async () => {
     console.log("Confirming delete for ID:", workspaceToDelete);
@@ -184,78 +184,78 @@ const ViewWorkspace = () => {
     }
   };
 
-  const handleExport = async (workspaceID: string) => {
-    if (!token) {
-      alert("Missing token or workspace data");
-      return;
-    }
-    setLoadingExport(true);
-    try {
-      const res = await fetch(`${API_PATH}/api/workspaces/export`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workspaceID }),
-      });
+//   const handleExport = async (workspaceID: string) => {
+//     if (!token) {
+//       alert("Missing token or workspace data");
+//       return;
+//     }
+//     setLoadingExport(true);
+//     try {
+//       const res = await fetch(`${API_PATH}/api/workspaces/export`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ workspaceID }),
+//       });
   
-      if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
+//       if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
       
-      // Respone adalah file PDF binary
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+//       // Respone adalah file PDF binary
+//       const blob = await res.blob();
+//       const url = window.URL.createObjectURL(blob);
   
-      // Download file PDF dengan nama workspace_title.pdf
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${workspaceData?.title || "Untitled"}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+//       // Download file PDF dengan nama workspace_title.pdf
+//       const a = document.createElement("a");
+//       a.href = url;
+//       a.download = `${workspaceData?.title || "Untitled"}.pdf`;
+//       document.body.appendChild(a);
+//       a.click();
+//       a.remove();
+//       window.URL.revokeObjectURL(url);
   
-      setShowExportModal(true);
-        } catch (error) {
-          alert("Failed to export workspace: " + (error as Error).message);
-        } finally {
-          setLoadingExport(false);
-        }
-    };
+//       setShowExportModal(true);
+//         } catch (error) {
+//           alert("Failed to export workspace: " + (error as Error).message);
+//         } finally {
+//           setLoadingExport(false);
+//         }
+//     };
     
   const closeModalExport = () => {
     setShowExportModal(false);
   };
 
-  const stopSharingWorkspace = async () => {
-    setShared(false);
-    return true;
-  };
+//   const stopSharingWorkspace = async () => {
+//     setShared(false);
+//     return true;
+//   };
 
-  const confirmStopShare = async () => {
-    const success = await stopSharingWorkspace();
-    if (success) {
-      setShowStopShareModal(false);
-      navigate("/dashboard");
-    } else {
-      alert("Failed to stop sharing workspace. Please try again.");
-    }
-  };
+//   const confirmStopShare = async () => {
+//     const success = await stopSharingWorkspace();
+//     if (success) {
+//       setShowStopShareModal(false);
+//       navigate("/dashboard");
+//     } else {
+//       alert("Failed to stop sharing workspace. Please try again.");
+//     }
+//   };
 
-  const handleStopShare = async (workspaceId: string) => {
-    const link = await stopShareWorkspace(workspaceId);
-    if (link){
-        const updated = workspaceList.map((w) => 
-        w.id === id ? {...w, sharedLink: link } : w
-      );
-      setWorkspaceList(updated);
-      setWorkspaceData((prevWorkspaceData: any) => ({
-        ...prevWorkspaceData,
-        sharedLink: link
-      }));  
-    }
-    setShowStopShareModal(true);
-  }
+//   const handleStopShare = async (workspaceId: string) => {
+//     const link = await stopShareWorkspace(workspaceId);
+//     if (link){
+//         const updated = workspaceList.map((w) => 
+//         w.id === id ? {...w, sharedLink: link } : w
+//       );
+//       setWorkspaceList(updated);
+//       setWorkspaceData((prevWorkspaceData: any) => ({
+//         ...prevWorkspaceData,
+//         sharedLink: link
+//       }));  
+//     }
+//     setShowStopShareModal(true);
+//   }
 
   const inputStyle =
     "font-sans w-full px-[4px] py-[6px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0_2px_1px_rgba(0,0,0,0.25)] focus:inset-shadow-none resize-none";
@@ -349,7 +349,7 @@ const ViewWorkspace = () => {
       )}
 
       {/* Stop Share Modal */}
-      {showStopShareModal && (
+      {/* {showStopShareModal && (
         <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
           <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
           <div className="bg-pop rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
@@ -371,7 +371,7 @@ const ViewWorkspace = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Pop up Delete Success */}
       {showDeleteSuccess && (
@@ -510,7 +510,7 @@ const ViewWorkspace = () => {
             </div>
           )}
 
-          <div className="flex justify-end space-x-[12px]">
+          {/* <div className="flex justify-end space-x-[12px]">
             {workspaceData?.sharedLink && shared ?
               <button
                 onClick={() => handleStopShare(id || "Null")}
@@ -549,12 +549,12 @@ const ViewWorkspace = () => {
             >
               Delete
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </>
   );
 };
 
-export default ViewWorkspace;
+export default SeeWorkspace;
 
