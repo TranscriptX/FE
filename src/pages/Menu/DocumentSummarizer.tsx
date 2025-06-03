@@ -107,6 +107,8 @@ const DocumentSummarizer = () => {
         const errorData = await response.json();
         alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
         if (errorData.message === "Invalid or expired token. Please login."){
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
           navigate("/login");
         }
       }
@@ -128,6 +130,8 @@ const DocumentSummarizer = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("User not authenticated. Please login.");
+      localStorage.removeItem("token");
+      localStorage.removeItem("userId");
       navigate("/login");
       return;
     }

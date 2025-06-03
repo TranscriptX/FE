@@ -34,7 +34,7 @@ const Navbar = (props: NavbarType) => {
 
     const logout = () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("userId")
+        localStorage.removeItem("userId");
         navigate("/login");
     };
 

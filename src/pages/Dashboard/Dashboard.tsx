@@ -68,6 +68,8 @@ const Dashboard = () => {
 
       if (!res.ok) {
         alert("User not authenticated. Please login.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
         navigate("/login");
         return;
       }

@@ -62,6 +62,8 @@ const AudioVideoTranscription = () => {
         const userID = getUserIdFromToken(token);
         if (!userID) {
           alert("Invalid token. Please log in again.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
           navigate("/login");
           return;
         }
@@ -116,6 +118,8 @@ const AudioVideoTranscription = () => {
     const userID = getUserIdFromToken(token);
     if (!userID) {
       alert("Invalid token. Please log in again.");
+      localStorage.removeItem("token");
+      localStorage.removeItem("userId");
       navigate("/login");
       return;
     }
@@ -171,6 +175,8 @@ const AudioVideoTranscription = () => {
         const errorData = await response.json();
         alert(`Failed to summarize: ${errorData.message || "Unknown error"}`);
         if (errorData.message === "Invalid or expired token. Please login."){
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
           navigate("/login");
         }
       }
@@ -188,6 +194,8 @@ const AudioVideoTranscription = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         alert("User not authenticated.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
         navigate("/login");
         return;
       }
