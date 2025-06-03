@@ -22,6 +22,8 @@ const DocumentSummarizer = () => {
   const [workspaceID, setWorkspaceID] = useState<string | null>(null); // To store dynamic workspaceID
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharedLink, setSharedLink] = useState(""); // To store the generated link
+  const [loadingExport, setLoadingExport] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const inputStyle =
     "font-sans w-[480px] px-[4px] py-[12px] mt-[8px] inset-shadow-[0px_0px_2px_1px_rgba(0,0,0,0.25)] border border-dark_grey rounded-[5px] focus:outline-none focus:ring-2 focus:ring-dark_grey text-[16px] focus:shadow-[0,2px,1px,rgba(0,0,0,0.25)] focus:inset-shadow-none resize-none";
@@ -167,19 +169,56 @@ const DocumentSummarizer = () => {
   };
 
   // Export workspace data
-  const handleExport = () => {
+  const handleExport = async (workspaceID: string) => {
+    const token = localStorage.getItem("token");
     const workspaceData = {
       title: workspaceTitle,
       description: workspaceDescription,
       summary: summaryResult,
       fileName: file ? file.name : "Unnamed File",
     };
-    navigate("/ExportWorkspace", { state: workspaceData });
+    if (!token) {
+          alert("Missing token or workspace data");
+          return;
+        }
+        setLoadingExport(true);
+        try {
+          const res = await fetch(`${API_PATH}/api/workspaces/export`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ workspaceID }),
+          });
+      
+          if (!res.ok) throw new Error(`Export failed with status ${res.status}`);
+          
+          // Respone adalah file PDF binary
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+      
+          // Download file PDF dengan nama workspace_title.pdf
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${workspaceData.title || "workspace"}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+      
+          setShowExportModal(true);
+          } catch (error) {
+            alert("Failed to export workspace: " + (error as Error).message);
+          } finally {
+            setLoadingExport(false);
+          }
   };
 
   // Close Modals
   const closeModal = () => {
     setShowShareModal(false);
+    setShowExportModal(false);
   };
 
   return (
@@ -216,6 +255,24 @@ const DocumentSummarizer = () => {
             <button
               onClick={closeModal}
               className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0,2px,3px,rgba(0,0,0,0.25)] cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 flex justify-center items-center min-w-screen min-h-screen z-48">
+          <div className="fixed inset-0 opacity-70 z-49 bg-color_primary min-w-screen min-h-screen"></div>
+          <div className="bg-pop p-8 rounded-lg shadow-lg min-w-[400px] text-center z-51 relative flex flex-col items-center shadow-[3px_8px_10px_rgba(0,0,0,0.25)]">
+            <h2 className="text-xl font-bold mb-0">Successfully Export Workspace</h2>
+            <img src={checkSign} alt="check" className="size-[96px]" />
+            <p>____________________________________________</p>
+            <button
+              onClick={closeModal}
+              className="bg-ijo text-color_primary font-bold px-[20px] py-[6px] mb-[8px] ml-auto mr-[10px] shadow border-none rounded hover:bg-ijoHover transition-all duration-300 ease-in-out shadow-[0_2px_3px_rgba(0,0,0,0.25)] cursor-pointer"
             >
               OK
             </button>
@@ -310,8 +367,8 @@ const DocumentSummarizer = () => {
                     Share
                   </button>
                   <button
-                    onClick={handleExport}
-                    disabled={isLoading}
+                    onClick={() => handleExport(workspaceID || "Null")}
+                    disabled={isLoading || loadingExport}
                     className="py-[8px] px-[24px] mt-[10px] bg-minty text-white hover:ring-1 hover:ring-minty cursor-pointer border-minty rounded-[5px] shadow-[0,1px,2px,rgba(0,199,190,0.25)] transition-all duration-400 ease-in-out"
                   >
                     Export
